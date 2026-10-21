@@ -98,6 +98,42 @@
   // 按钮
   document.getElementById('startBtn').addEventListener('click', startGame);
 
+// --- Управление касанием (мобильные) ---
+let touchStartX = null;
+
+canvas.addEventListener('touchstart', (e) => {
+  if (!running || gameOver) return;
+  touchStartX = e.touches[0].clientX;
+  e.preventDefault();
+}, { passive: false });
+
+canvas.addEventListener('touchend', (e) => {
+  if (!running || gameOver || touchStartX === null) return;
+  const touchEndX = e.changedTouches[0].clientX;
+  const deltaX = touchEndX - touchStartX;
+  const threshold = 30; // минимальная длина свайпа в пикселях
+
+  if (Math.abs(deltaX) > threshold) {
+    // Свайп влево/вправо — переключение дорожки
+    if (deltaX < 0) {
+      playerLane = (playerLane + LANES - 1) % LANES;
+    } else {
+      playerLane = (playerLane + 1) % LANES;
+    }
+  } else {
+    // Короткий тап — переход на дорожку, по которой тапнули
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const tapX = (touchEndX - rect.left) * scaleX;
+    const tappedLane = Math.floor(tapX / LANE_WIDTH);
+    if (tappedLane >= 0 && tappedLane < LANES) {
+      playerLane = tappedLane;
+    }
+  }
+  touchStartX = null;
+  e.preventDefault();
+}, { passive: false });
+
   function startGame() {
     if (spawnInterval) clearInterval(spawnInterval);
     playerLane = 1;
