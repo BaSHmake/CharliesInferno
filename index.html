@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Charles EGG 小游戏</title>
+<style>
+  * { box-sizing: border-box; user-select: none; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center;
+    background: #111; font-family: 'Courier New', monospace; color: #fff;
+  }
+  .game-container {
+    background: #222; padding: 20px; border-radius: 12px;
+    box-shadow: 0 0 40px rgba(0,255,0,0.1); text-align: center;
+  }
+  canvas { display: block; margin: 0 auto; background: #1a1a1a; border: 2px solid #444; border-radius: 8px; }
+  .hud {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 4px; font-size: 18px; letter-spacing: 1px;
+  }
+  .lives span { color: #ff4444; font-size: 22px; margin-right: 2px; }
+  .round { color: #aaa; }
+  button {
+    background: #2a5a2a; color: #fff; border: 2px solid #4a4; padding: 10px 24px;
+    font-family: inherit; font-size: 16px; border-radius: 8px; cursor: pointer; margin-top: 12px;
+    transition: background 0.15s;
+  }
+  button:hover { background: #3a7a3a; }
+  button:active { transform: scale(0.97); }
+  .msg { margin-top: 10px; font-size: 14px; color: #ccc; min-height: 20px; }
+  .charles-face {
+    display: inline-block; width: 22px; height: 22px; background: #fff; border-radius: 50%;
+    position: relative; vertical-align: middle; margin-right: 6px;
+  }
+  .charles-face::before, .charles-face::after {
+    content: ''; position: absolute; width: 4px; height: 4px; background: #000; border-radius: 50%; top: 7px;
+  }
+  .charles-face::before { left: 5px; }
+  .charles-face::after { right: 5px; }
+  .charles-eye-line { width: 10px; height: 2px; background: #000; position: absolute; bottom: 6px; left: 6px; border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="game-container">
+  <div class="hud">
+    <div class="lives"><span>❤</span><span id="livesDisplay">❤❤❤</span></div>
+    <div class="round">回合 <span id="roundDisplay">1</span>/3</div>
+    <div>分数: <span id="scoreDisplay">0</span></div>
+  </div>
+  <canvas id="gameCanvas" width="400" height="500"></canvas>
+  <div class="msg" id="message"><span class="charles-face"><span class="charles-eye-line"></span></span> 按“开始 / 重新开始”</div>
+  <button id="startBtn">开始 / 重新开始</button>
+</div>
+<script>
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const livesDisplay = document.getElementById('livesDisplay');
+  const roundDisplay = document.getElementById('roundDisplay');
+  const scoreDisplay = document.getElementById('scoreDisplay');
+  const messageEl = document.getElementById('message');
+
+  const LANES = 3;
+  const LANE_WIDTH = canvas.width / LANES;
+  const PLAYER_Y = canvas.height - 60;
+  const PLAYER_W = 36;
+  const PLAYER_H = 36;
+  const EGG_W = 20;
+  const EGG_H = 26;
+  const ROTTEN_COLOR = '#6a8a6a'; // 烂蛋：灰绿色
+  const EGG_COLOR = '#f0e8d0'; // 好蛋：米白
+  const DIAMOND_COLOR = '#aaf0ff'; // 钻石蛋（可选，加双倍分）
+
+  // 游戏状态
+  let playerLane = 1; // 0,1,2
+  let lives = 3;
+  let round = 1;
+  let score = 0;
+  let eggs = [];
+  let running = false;
+  let gameOver = false;
+  let roundComplete = false;
+
+  // 生成节奏
+  let spawnInterval = null;
+  const SPAWN_MS = 700; // 每 700ms 生成一个蛋
+
+  // 输入处理
+  document.addEventListener('keydown', (e) => {
+    if (!running || gameOver) return;
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+      playerLane = (playerLane + LANES - 1) % LANES;
+    } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+      playerLane = (playerLane + 1) % LANES;
+    }
+  });
+
+  // 按钮
+  document.getElementById('startBtn').addEventListener('click', startGame);
+
+  function startGame() {
+    if (spawnInterval) clearInterval(spawnInterval);
+    playerLane = 1;
+    lives = 3;
+    round = 1;
+    score = 0;
+    eggs = [];
+    running = true;
+    gameOver = false;
+    roundComplete = false;
+    updateHUD();
+    messageEl.textContent = '接住好蛋，避开烂蛋！';
+    startSpawning();
+    requestAnimationFrame(gameLoop);
+  }
+
+  function startSpawning() {
+    if (spawnInterval) clearInterval(spawnInterval);
+    spawnInterval = setInterval(() => {
+      if (!running || gameOver || roundComplete) return;
+      const lane = Math.floor(Math.random() * LANES);
+      const type = Math.random() < 0.28 ? 'rotten' : (Math.random() < 0.1 ? 'diamond' : 'normal');
+      eggs.push({
+        lane: lane,
+        y: -EGG_H,
+        type: type,
+        speed: 2.2 + Math.random() * 1.2
+      });
+    }, SPAWN_MS);
+  }
+
+  function updateHUD() {
+    livesDisplay.textContent = '❤'.repeat(lives) || '💀';
+    roundDisplay.textContent = round;
+    scoreDisplay.textContent = score;
+  }
+
+  function gameLoop() {
+    if (!running) return;
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+  }
+
+  function update() {
+    if (gameOver || roundComplete) return;
+
+    // 更新蛋的位置
+    for (let i = eggs.length - 1; i >= 0; i--) {
+      const egg = eggs[i];
+      egg.y += egg.speed;
+
+      // 碰撞检测（玩家区域）
+      const eggCenterX = egg.lane * LANE_WIDTH + LANE_WIDTH / 2;
+      const playerCenterX = playerLane * LANE_WIDTH + LANE_WIDTH / 2;
+      const playerTop = PLAYER_Y - PLAYER_H / 2;
+      const playerBottom = PLAYER_Y + PLAYER_H / 2;
+
+      // 蛋底部接近玩家顶部时判定
+      if (egg.y + EGG_H >= playerTop && egg.y <= playerBottom &&
+          Math.abs(eggCenterX - playerCenterX) < LANE_WIDTH * 0.4) {
+        // 接到
+        if (egg.type === 'rotten') {
+          // 接到烂蛋：扣命
+          lives--;
+          if (lives < 0) lives = 0;
+          updateHUD();
+          eggs.splice(i, 1);
+          if (lives <= 0) {
+            triggerGameOver();
+            return;
+          }
+          continue;
+        } else {
+          // 好蛋
+          score += egg.type === 'diamond' ? 20 : 10;
+          updateHUD();
+          eggs.splice(i, 1);
+          continue;
+        }
+      }
+
+      // 落出屏幕底部
+      if (egg.y > canvas.height + 20) {
+        if (egg.type !== 'rotten') {
+          // 没接到好蛋：扣命
+          lives--;
+          if (lives < 0) lives = 0;
+          updateHUD();
+          if (lives <= 0) {
+            triggerGameOver();
+            return;
+          }
+        }
+        eggs.splice(i, 1);
+      }
+    }
+
+    // 检查是否达成回合数（简单方式：按分数阈值或接蛋计数，这里用接蛋数简化）
+    // 为了可控，每接住 8 个好蛋算完成一个回合
+    // 用总接蛋数记录，这里简化用 score 判断：每 100 分晋升一回合（因为烂蛋扣命不扣分，好蛋10分）
+    // 更准确：用接住的好蛋数量
+    // 但分数已能反映，这里用 score 阈值
+    if (score >= round * 80 && round < 3) {
+      round++;
+      updateHUD();
+      messageEl.textContent = `进入第 ${round} 回合！`;
+      // 稍微加快速度
+      // 可选：调整 SPAWN_MS
+    }
+    if (score >= 240 && round === 3 && !roundComplete) {
+      // 完成 3 回合
+      roundComplete = true;
+      running = false;
+      if (spawnInterval) clearInterval(spawnInterval);
+      messageEl.textContent = '🎉 你赢了！按“开始 / 重新开始”再玩。';
+    }
+  }
+
+  function triggerGameOver() {
+    gameOver = true;
+    running = false;
+    if (spawnInterval) clearInterval(spawnInterval);
+    messageEl.textContent = '💀 查尔斯咬了你！游戏结束。按“开始 / 重新开始”。';
+  }
+
+  function draw() {
+    // 清屏
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // 画三条道
+    for (let i = 0; i <= LANES; i++) {
+      ctx.beginPath();
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 1;
+      ctx.moveTo(i * LANE_WIDTH, 0);
+      ctx.lineTo(i * LANE_WIDTH, canvas.height);
+      ctx.stroke();
+    }
+
+    // 画蛋
+    eggs.forEach(egg => {
+      const x = egg.lane * LANE_WIDTH + LANE_WIDTH / 2 - EGG_W / 2;
+      const y = egg.y;
+
+      if (egg.type === 'normal') {
+        ctx.fillStyle = EGG_COLOR;
+        ctx.beginPath();
+        ctx.ellipse(x + EGG_W / 2, y + EGG_H / 2, EGG_W / 2, EGG_H / 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#aaa';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      } else if (egg.type === 'rotten') {
+        ctx.fillStyle = ROTTEN_COLOR;
+        ctx.beginPath();
+        ctx.ellipse(x + EGG_W / 2, y + EGG_H / 2, EGG_W / 2, EGG_H / 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // 裂纹
+        ctx.strokeStyle = '#3a5a3a';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x + 4, y + 8);
+        ctx.lineTo(x + 12, y + 12);
+        ctx.lineTo(x + 8, y + 20);
+        ctx.stroke();
+      } else if (egg.type === 'diamond') {
+        // 钻石蛋画成多边形
+        ctx.fillStyle = DIAMOND_COLOR;
+        ctx.beginPath();
+        ctx.moveTo(x + EGG_W / 2, y);
+        ctx.lineTo(x + EGG_W, y + EGG_H / 2);
+        ctx.lineTo(x + EGG_W / 2, y + EGG_H);
+        ctx.lineTo(x, y + EGG_H / 2);
+        ctx.closePath();
+        ctx.fill();
+      }
+    });
+
+    // 画玩家（像素风 Charles）
+    const px = playerLane * LANE_WIDTH + LANE_WIDTH / 2;
+    const py = PLAYER_Y;
+
+    // 身体：青色方块
+    ctx.fillStyle = '#3aa0a0';
+    ctx.fillRect(px - PLAYER_W / 2, py - PLAYER_H / 2, PLAYER_W, PLAYER_H);
+
+    // 头部：白色圆
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(px, py - PLAYER_H / 2 - 6, 12, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 眼睛
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.arc(px - 4, py - PLAYER_H / 2 - 8, 2.5, 0, Math.PI * 2);
+    ctx.arc(px + 4, py - PLAYER_H / 2 - 8, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 篮子（简单线条）
+    ctx.strokeStyle = '#aa8844';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(px, py - PLAYER_H / 2 - 22, 10, 0, Math.PI);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(px - 12, py - PLAYER_H / 2 - 20);
+    ctx.lineTo(px - 12, py - PLAYER_H / 2 - 12);
+    ctx.lineTo(px + 12, py - PLAYER_H / 2 - 12);
+    ctx.lineTo(px + 12, py - PLAYER_H / 2 - 20);
+    ctx.stroke();
+
+    // 如果游戏结束，画个红色覆盖
+    if (gameOver) {
+      ctx.fillStyle = 'rgba(150, 0, 0, 0.25)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    if (roundComplete) {
+      ctx.fillStyle = 'rgba(0, 150, 0, 0.15)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  // 初始绘制
+  draw();
+</script>
+</body>
+</html>
