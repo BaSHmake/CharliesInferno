@@ -96,6 +96,68 @@
   });
 
   // 按钮
+
+// ===== ЭФФЕКТЫ =====
+
+// --- 7. Звуки через Web Audio API (без файлов) ---
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+function playTone(freq, duration, type = 'square', volume = 0.08) {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + duration);
+}
+function sfxCatch()   { playTone(880, 0.08, 'square', 0.06); }
+function sfxRotten()  { playTone(120, 0.25, 'sawtooth', 0.12); }
+function sfxDiamond() { playTone(1320, 0.10, 'triangle', 0.08); setTimeout(() => playTone(1760, 0.10, 'triangle', 0.08), 80); }
+function sfxGameOver(){ playTone(200, 0.4, 'sawtooth', 0.15); setTimeout(() => playTone(120, 0.5, 'sawtooth', 0.15), 200); }
+function sfxWin()     { playTone(660, 0.1, 'square', 0.08); setTimeout(() => playTone(880, 0.1, 'square', 0.08), 100); setTimeout(() => playTone(1320, 0.2, 'square', 0.08), 200); }
+
+// --- 8. Частицы при поимке ---
+let particles = [];
+function spawnParticles(x, y, color) {
+  for (let i = 0; i < 10; i++) {
+    particles.push({
+      x: x, y: y,
+      vx: (Math.random() - 0.5) * 5,
+      vy: (Math.random() - 0.5) * 5 - 1,
+      life: 1,
+      color: color,
+      size: 2 + Math.random() * 3
+    });
+  }
+}
+function updateParticles() {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.15; // гравитация
+    p.life -= 0.03;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+}
+
+// --- 9. Тряска экрана ---
+let shake = 0;
+function triggerShake(amount) { shake = Math.max(shake, amount); }
+
+// --- 10. Вспышка красным ---
+let flash = 0; // 0..1
+function triggerFlash(amount) { flash = Math.max(flash, amount); }
   document.getElementById('startBtn').addEventListener('click', startGame);
 
 // --- Управление касанием (мобильные) ---
