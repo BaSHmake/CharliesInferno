@@ -29,6 +29,7 @@
   button:hover { background: #3a7a3a; }
   button:active { transform: scale(0.97); }
   .msg { margin-top: 10px; font-size: 14px; color: #ccc; min-height: 20px; }
+  .record { margin-top: 6px; font-size: 14px; color: #ffd700; }
   .charles-face {
     display: inline-block; width: 22px; height: 22px; background: #fff; border-radius: 50%;
     position: relative; vertical-align: middle; margin-right: 6px;
@@ -45,11 +46,12 @@
 <div class="game-container">
   <div class="hud">
     <div class="lives"><span>❤</span><span id="livesDisplay">❤❤❤</span></div>
-    <div class="round">Раунд <span id="roundDisplay">1</span>/3</div>
+    <div class="round">Раунд <span id="roundDisplay">1</span></div>
     <div>Очки: <span id="scoreDisplay">0</span></div>
   </div>
   <canvas id="gameCanvas" width="400" height="500"></canvas>
   <div class="msg" id="message"><span class="charles-face"><span class="charles-eye-line"></span></span> Нажмите «Начать / Заново»</div>
+  <div class="record">🏆 Рекорд: <span id="recordDisplay">0</span></div>
   <button id="startBtn">Начать / Заново</button>
 </div>
 <script>
@@ -58,6 +60,7 @@
   const livesDisplay = document.getElementById('livesDisplay');
   const roundDisplay = document.getElementById('roundDisplay');
   const scoreDisplay = document.getElementById('scoreDisplay');
+  const recordDisplay = document.getElementById('recordDisplay');
   const messageEl = document.getElementById('message');
 
   const LANES = 3;
@@ -80,7 +83,11 @@
   let gameOver = false;
   let roundComplete = false;
   let spawnInterval = null;
-  const SPAWN_MS = 700;
+  let currentSpawnMs = 700;
+
+  // Рекорд из localStorage
+  let record = parseInt(localStorage.getItem('charlesEggRecord') || '0', 10);
+  recordDisplay.textContent = record;
 
   // ===== ЭФФЕКТЫ =====
   let audioCtx = null;
@@ -106,6 +113,7 @@
   function sfxDiamond() { playTone(1320, 0.10, 'triangle', 0.08); setTimeout(() => playTone(1760, 0.10, 'triangle', 0.08), 80); }
   function sfxGameOver(){ playTone(200, 0.4, 'sawtooth', 0.15); setTimeout(() => playTone(120, 0.5, 'sawtooth', 0.15), 200); }
   function sfxWin()     { playTone(660, 0.1, 'square', 0.08); setTimeout(() => playTone(880, 0.1, 'square', 0.08), 100); setTimeout(() => playTone(1320, 0.2, 'square', 0.08), 200); }
+  function sfxRecord()  { playTone(880, 0.12, 'triangle', 0.1); setTimeout(() => playTone(1100, 0.12, 'triangle', 0.1), 120); setTimeout(() => playTone(1320, 0.2, 'triangle', 0.1), 240); }
 
   let particles = [];
   function spawnParticles(x, y, color) {
@@ -182,14 +190,25 @@
     requestAnimationFrame(gameLoop);
   }
 
+  // Сколько нужно очков для следующего раунда (растёт с каждым раундом)
+  function scoreForNextRound() {
+    return 80 + (round - 1) * 60; // 80, 140, 200, 260...
+  }
+
   function startSpawning() {
     if (spawnInterval) clearInterval(spawnInterval);
+    // Интервал уменьшается с раундом, но не быстрее 280 мс
+    currentSpawnMs = Math.max(280, 700 - (round - 1) * 70);
     spawnInterval = setInterval(() => {
-      if (!running || gameOver || roundComplete) return;
+      if (!running || gameOver) return;
       const lane = Math.floor(Math.random() * LANES);
-      const type = Math.random() < 0.28 ? 'rotten' : (Math.random() < 0.1 ? 'diamond' : 'normal');
-      eggs.push({ lane: lane, y: -EGG_H, type: type, speed: 2.2 + Math.random() * 1.2 });
-    }, SPAWN_MS);
+      // Гнилых яиц всё больше с раундом
+      const rottenChance = Math.min(0.55, 0.28 + (round - 1) * 0.07);
+      const type = Math.random() < rottenChance ? 'rotten' : (Math.random() < 0.1 ? 'diamond' : 'normal');
+      // Скорость падения растёт с раундом
+      const baseSpeed = 2.2 + Math.random() * 1.2 + (round - 1) * 0.5;
+      eggs.push({ lane: lane, y: -EGG_H, type: type, speed: baseSpeed });
+    }, currentSpawnMs);
   }
 
   function updateHUD() {
@@ -206,7 +225,7 @@
   }
 
   function update() {
-    if (gameOver || roundComplete) return;
+    if (gameOver) return;
     updateParticles();
 
     for (let i = eggs.length - 1; i >= 0; i--) {
@@ -255,15 +274,13 @@
       }
     }
 
-    if (score >= round * 80 && round < 3) {
-      round++; updateHUD();
-      messageEl.textContent = `Начался раунд ${round}!`;
-    }
-    if (score >= 240 && round === 3 && !roundComplete) {
-      roundComplete = true; running = false;
-      if (spawnInterval) clearInterval(spawnInterval);
-      sfxWin();
-      messageEl.textContent = '🎉 Победа! Нажмите «Начать / Заново», чтобы сыграть ещё.';
+    // Переход на следующий раунд (бесконечно)
+    if (score >= scoreForNextRound()) {
+      round++;
+      updateHUD();
+      startSpawning(); // перезапускаем спавн с новыми настройками
+      messageEl.textContent = `Раунд ${round}! Яйца быстрее, гнилых больше.`;
+      triggerFlash(0.2);
     }
   }
 
@@ -272,7 +289,17 @@
     if (spawnInterval) clearInterval(spawnInterval);
     sfxGameOver(); triggerShake(15); triggerFlash(0.8);
     if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
-    messageEl.textContent = '💀 Чарльз вас укусил! Игра окончена. Нажмите «Начать / Заново».';
+
+    // Проверка рекорда
+    if (score > record) {
+      record = score;
+      localStorage.setItem('charlesEggRecord', record);
+      recordDisplay.textContent = record;
+      sfxRecord();
+      messageEl.textContent = `🏆 Новый рекорд: ${score}! Нажмите «Начать / Заново».`;
+    } else {
+      messageEl.textContent = `💀 Чарльз вас укусил! Очки: ${score}. Рекорд: ${record}. Нажмите «Начать / Заново».`;
+    }
   }
 
   function draw() {
@@ -366,10 +393,6 @@
 
     if (gameOver) {
       ctx.fillStyle = 'rgba(150, 0, 0, 0.25)';
-      ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
-    }
-    if (roundComplete) {
-      ctx.fillStyle = 'rgba(0, 150, 0, 0.15)';
       ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
     }
 
