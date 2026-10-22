@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Charles EGG 小游戏</title>
+<title>Чарльз и яйца</title>
 <style>
-  * { box-sizing: border-box; user-select: none; }
+  * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
   body {
     margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center;
     background: #111; font-family: 'Courier New', monospace; color: #fff;
@@ -45,12 +45,12 @@
 <div class="game-container">
   <div class="hud">
     <div class="lives"><span>❤</span><span id="livesDisplay">❤❤❤</span></div>
-    <div class="round">回合 <span id="roundDisplay">1</span>/3</div>
-    <div>分数: <span id="scoreDisplay">0</span></div>
+    <div class="round">Раунд <span id="roundDisplay">1</span>/3</div>
+    <div>Очки: <span id="scoreDisplay">0</span></div>
   </div>
   <canvas id="gameCanvas" width="400" height="500"></canvas>
-  <div class="msg" id="message"><span class="charles-face"><span class="charles-eye-line"></span></span> 按“开始 / 重新开始”</div>
-  <button id="startBtn">开始 / 重新开始</button>
+  <div class="msg" id="message"><span class="charles-face"><span class="charles-eye-line"></span></span> Нажмите «Начать / Заново»</div>
+  <button id="startBtn">Начать / Заново</button>
 </div>
 <script>
   const canvas = document.getElementById('gameCanvas');
@@ -67,12 +67,11 @@
   const PLAYER_H = 36;
   const EGG_W = 20;
   const EGG_H = 26;
-  const ROTTEN_COLOR = '#6a8a6a'; // 烂蛋：灰绿色
-  const EGG_COLOR = '#f0e8d0'; // 好蛋：米白
-  const DIAMOND_COLOR = '#aaf0ff'; // 钻石蛋（可选，加双倍分）
+  const ROTTEN_COLOR = '#6a8a6a';
+  const EGG_COLOR = '#f0e8d0';
+  const DIAMOND_COLOR = '#aaf0ff';
 
-  // 游戏状态
-  let playerLane = 1; // 0,1,2
+  let playerLane = 1;
   let lives = 3;
   let round = 1;
   let score = 0;
@@ -80,12 +79,59 @@
   let running = false;
   let gameOver = false;
   let roundComplete = false;
-
-  // 生成节奏
   let spawnInterval = null;
-  const SPAWN_MS = 700; // 每 700ms 生成一个蛋
+  const SPAWN_MS = 700;
 
-  // 输入处理
+  // ===== ЭФФЕКТЫ =====
+  let audioCtx = null;
+  function ensureAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+  function playTone(freq, duration, type = 'square', volume = 0.08) {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  }
+  function sfxCatch()   { playTone(880, 0.08, 'square', 0.06); }
+  function sfxRotten()  { playTone(120, 0.25, 'sawtooth', 0.12); }
+  function sfxDiamond() { playTone(1320, 0.10, 'triangle', 0.08); setTimeout(() => playTone(1760, 0.10, 'triangle', 0.08), 80); }
+  function sfxGameOver(){ playTone(200, 0.4, 'sawtooth', 0.15); setTimeout(() => playTone(120, 0.5, 'sawtooth', 0.15), 200); }
+  function sfxWin()     { playTone(660, 0.1, 'square', 0.08); setTimeout(() => playTone(880, 0.1, 'square', 0.08), 100); setTimeout(() => playTone(1320, 0.2, 'square', 0.08), 200); }
+
+  let particles = [];
+  function spawnParticles(x, y, color) {
+    for (let i = 0; i < 10; i++) {
+      particles.push({
+        x: x, y: y,
+        vx: (Math.random() - 0.5) * 5,
+        vy: (Math.random() - 0.5) * 5 - 1,
+        life: 1, color: color, size: 2 + Math.random() * 3
+      });
+    }
+  }
+  function updateParticles() {
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life -= 0.03;
+      if (p.life <= 0) particles.splice(i, 1);
+    }
+  }
+
+  let shake = 0;
+  function triggerShake(amount) { shake = Math.max(shake, amount); }
+  let flash = 0;
+  function triggerFlash(amount) { flash = Math.max(flash, amount); }
+
+  // ===== УПРАВЛЕНИЕ =====
   document.addEventListener('keydown', (e) => {
     if (!running || gameOver) return;
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
@@ -95,119 +141,43 @@
     }
   });
 
-  // 按钮
+  let touchStartX = null;
+  canvas.addEventListener('touchstart', (e) => {
+    if (!running || gameOver) return;
+    touchStartX = e.touches[0].clientX;
+    e.preventDefault();
+  }, { passive: false });
+  canvas.addEventListener('touchend', (e) => {
+    if (!running || gameOver || touchStartX === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const deltaX = touchEndX - touchStartX;
+    const threshold = 30;
+    if (Math.abs(deltaX) > threshold) {
+      if (deltaX < 0) playerLane = (playerLane + LANES - 1) % LANES;
+      else playerLane = (playerLane + 1) % LANES;
+    } else {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const tapX = (touchEndX - rect.left) * scaleX;
+      const tappedLane = Math.floor(tapX / LANE_WIDTH);
+      if (tappedLane >= 0 && tappedLane < LANES) playerLane = tappedLane;
+    }
+    touchStartX = null;
+    e.preventDefault();
+  }, { passive: false });
 
-// ===== ЭФФЕКТЫ =====
-
-// --- 7. Звуки через Web Audio API (без файлов) ---
-let audioCtx = null;
-function ensureAudio() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-}
-function playTone(freq, duration, type = 'square', volume = 0.08) {
-  if (!audioCtx) return;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = type;
-  osc.frequency.value = freq;
-  gain.gain.setValueAtTime(volume, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.start();
-  osc.stop(audioCtx.currentTime + duration);
-}
-function sfxCatch()   { playTone(880, 0.08, 'square', 0.06); }
-function sfxRotten()  { playTone(120, 0.25, 'sawtooth', 0.12); }
-function sfxDiamond() { playTone(1320, 0.10, 'triangle', 0.08); setTimeout(() => playTone(1760, 0.10, 'triangle', 0.08), 80); }
-function sfxGameOver(){ playTone(200, 0.4, 'sawtooth', 0.15); setTimeout(() => playTone(120, 0.5, 'sawtooth', 0.15), 200); }
-function sfxWin()     { playTone(660, 0.1, 'square', 0.08); setTimeout(() => playTone(880, 0.1, 'square', 0.08), 100); setTimeout(() => playTone(1320, 0.2, 'square', 0.08), 200); }
-
-// --- 8. Частицы при поимке ---
-let particles = [];
-function spawnParticles(x, y, color) {
-  for (let i = 0; i < 10; i++) {
-    particles.push({
-      x: x, y: y,
-      vx: (Math.random() - 0.5) * 5,
-      vy: (Math.random() - 0.5) * 5 - 1,
-      life: 1,
-      color: color,
-      size: 2 + Math.random() * 3
-    });
-  }
-}
-function updateParticles() {
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    p.vy += 0.15; // гравитация
-    p.life -= 0.03;
-    if (p.life <= 0) particles.splice(i, 1);
-  }
-}
-
-// --- 9. Тряска экрана ---
-let shake = 0;
-function triggerShake(amount) { shake = Math.max(shake, amount); }
-
-// --- 10. Вспышка красным ---
-let flash = 0; // 0..1
-function triggerFlash(amount) { flash = Math.max(flash, amount); }
   document.getElementById('startBtn').addEventListener('click', startGame);
 
-// --- Управление касанием (мобильные) ---
-let touchStartX = null;
-
-canvas.addEventListener('touchstart', (e) => {
-  if (!running || gameOver) return;
-  touchStartX = e.touches[0].clientX;
-  e.preventDefault();
-}, { passive: false });
-
-canvas.addEventListener('touchend', (e) => {
-  if (!running || gameOver || touchStartX === null) return;
-  const touchEndX = e.changedTouches[0].clientX;
-  const deltaX = touchEndX - touchStartX;
-  const threshold = 30; // минимальная длина свайпа в пикселях
-
-  if (Math.abs(deltaX) > threshold) {
-    // Свайп влево/вправо — переключение дорожки
-    if (deltaX < 0) {
-      playerLane = (playerLane + LANES - 1) % LANES;
-    } else {
-      playerLane = (playerLane + 1) % LANES;
-    }
-  } else {
-    // Короткий тап — переход на дорожку, по которой тапнули
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const tapX = (touchEndX - rect.left) * scaleX;
-    const tappedLane = Math.floor(tapX / LANE_WIDTH);
-    if (tappedLane >= 0 && tappedLane < LANES) {
-      playerLane = tappedLane;
-    }
-  }
-  touchStartX = null;
-  e.preventDefault();
-}, { passive: false });
-
+  // ===== ИГРА =====
   function startGame() {
+    ensureAudio();
     if (spawnInterval) clearInterval(spawnInterval);
     playerLane = 1;
-    lives = 3;
-    round = 1;
-    score = 0;
-    eggs = [];
-    running = true;
-    gameOver = false;
-    roundComplete = false;
+    lives = 3; round = 1; score = 0;
+    eggs = []; particles = []; shake = 0; flash = 0;
+    running = true; gameOver = false; roundComplete = false;
     updateHUD();
-    messageEl.textContent = '接住好蛋，避开烂蛋！';
+    messageEl.textContent = 'Ловите хорошие яйца, избегайте гнилых!';
     startSpawning();
     requestAnimationFrame(gameLoop);
   }
@@ -218,12 +188,7 @@ canvas.addEventListener('touchend', (e) => {
       if (!running || gameOver || roundComplete) return;
       const lane = Math.floor(Math.random() * LANES);
       const type = Math.random() < 0.28 ? 'rotten' : (Math.random() < 0.1 ? 'diamond' : 'normal');
-      eggs.push({
-        lane: lane,
-        y: -EGG_H,
-        type: type,
-        speed: 2.2 + Math.random() * 1.2
-      });
+      eggs.push({ lane: lane, y: -EGG_H, type: type, speed: 2.2 + Math.random() * 1.2 });
     }, SPAWN_MS);
   }
 
@@ -242,92 +207,87 @@ canvas.addEventListener('touchend', (e) => {
 
   function update() {
     if (gameOver || roundComplete) return;
+    updateParticles();
 
-    // 更新蛋的位置
     for (let i = eggs.length - 1; i >= 0; i--) {
       const egg = eggs[i];
       egg.y += egg.speed;
-
-      // 碰撞检测（玩家区域）
       const eggCenterX = egg.lane * LANE_WIDTH + LANE_WIDTH / 2;
       const playerCenterX = playerLane * LANE_WIDTH + LANE_WIDTH / 2;
       const playerTop = PLAYER_Y - PLAYER_H / 2;
       const playerBottom = PLAYER_Y + PLAYER_H / 2;
 
-      // 蛋底部接近玩家顶部时判定
       if (egg.y + EGG_H >= playerTop && egg.y <= playerBottom &&
           Math.abs(eggCenterX - playerCenterX) < LANE_WIDTH * 0.4) {
-        // 接到
         if (egg.type === 'rotten') {
-          // 接到烂蛋：扣命
-          lives--;
-          if (lives < 0) lives = 0;
+          lives--; if (lives < 0) lives = 0;
           updateHUD();
+          sfxRotten(); triggerShake(8); triggerFlash(0.6);
+          if (navigator.vibrate) navigator.vibrate(120);
+          spawnParticles(eggCenterX, playerTop, '#6a8a6a');
           eggs.splice(i, 1);
-          if (lives <= 0) {
-            triggerGameOver();
-            return;
-          }
+          if (lives <= 0) { triggerGameOver(); return; }
           continue;
         } else {
-          // 好蛋
           score += egg.type === 'diamond' ? 20 : 10;
           updateHUD();
+          if (egg.type === 'diamond') {
+            sfxDiamond();
+            spawnParticles(eggCenterX, playerTop, '#aaf0ff');
+          } else {
+            sfxCatch();
+            spawnParticles(eggCenterX, playerTop, '#f0e8d0');
+          }
           eggs.splice(i, 1);
           continue;
         }
       }
 
-      // 落出屏幕底部
       if (egg.y > canvas.height + 20) {
         if (egg.type !== 'rotten') {
-          // 没接到好蛋：扣命
-          lives--;
-          if (lives < 0) lives = 0;
+          lives--; if (lives < 0) lives = 0;
           updateHUD();
-          if (lives <= 0) {
-            triggerGameOver();
-            return;
-          }
+          sfxRotten(); triggerFlash(0.4);
+          if (navigator.vibrate) navigator.vibrate(80);
+          if (lives <= 0) { triggerGameOver(); return; }
         }
         eggs.splice(i, 1);
       }
     }
 
-    // 检查是否达成回合数（简单方式：按分数阈值或接蛋计数，这里用接蛋数简化）
-    // 为了可控，每接住 8 个好蛋算完成一个回合
-    // 用总接蛋数记录，这里简化用 score 判断：每 100 分晋升一回合（因为烂蛋扣命不扣分，好蛋10分）
-    // 更准确：用接住的好蛋数量
-    // 但分数已能反映，这里用 score 阈值
     if (score >= round * 80 && round < 3) {
-      round++;
-      updateHUD();
-      messageEl.textContent = `进入第 ${round} 回合！`;
-      // 稍微加快速度
-      // 可选：调整 SPAWN_MS
+      round++; updateHUD();
+      messageEl.textContent = `Начался раунд ${round}!`;
     }
     if (score >= 240 && round === 3 && !roundComplete) {
-      // 完成 3 回合
-      roundComplete = true;
-      running = false;
+      roundComplete = true; running = false;
       if (spawnInterval) clearInterval(spawnInterval);
-      messageEl.textContent = '🎉 你赢了！按“开始 / 重新开始”再玩。';
+      sfxWin();
+      messageEl.textContent = '🎉 Победа! Нажмите «Начать / Заново», чтобы сыграть ещё.';
     }
   }
 
   function triggerGameOver() {
-    gameOver = true;
-    running = false;
+    gameOver = true; running = false;
     if (spawnInterval) clearInterval(spawnInterval);
-    messageEl.textContent = '💀 查尔斯咬了你！游戏结束。按“开始 / 重新开始”。';
+    sfxGameOver(); triggerShake(15); triggerFlash(0.8);
+    if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
+    messageEl.textContent = '💀 Чарльз вас укусил! Игра окончена. Нажмите «Начать / Заново».';
   }
 
   function draw() {
-    // 清屏
-    ctx.fillStyle = '#1a1a1a';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    if (shake > 0.5) {
+      const dx = (Math.random() - 0.5) * shake;
+      const dy = (Math.random() - 0.5) * shake;
+      ctx.translate(dx, dy);
+      shake *= 0.85;
+      if (shake < 0.5) shake = 0;
+    }
 
-    // 画三条道
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
+
     for (let i = 0; i <= LANES; i++) {
       ctx.beginPath();
       ctx.strokeStyle = '#333';
@@ -337,34 +297,25 @@ canvas.addEventListener('touchend', (e) => {
       ctx.stroke();
     }
 
-    // 画蛋
     eggs.forEach(egg => {
       const x = egg.lane * LANE_WIDTH + LANE_WIDTH / 2 - EGG_W / 2;
       const y = egg.y;
-
       if (egg.type === 'normal') {
         ctx.fillStyle = EGG_COLOR;
         ctx.beginPath();
         ctx.ellipse(x + EGG_W / 2, y + EGG_H / 2, EGG_W / 2, EGG_H / 2, 0, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = '#aaa';
-        ctx.lineWidth = 1;
-        ctx.stroke();
+        ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1; ctx.stroke();
       } else if (egg.type === 'rotten') {
         ctx.fillStyle = ROTTEN_COLOR;
         ctx.beginPath();
         ctx.ellipse(x + EGG_W / 2, y + EGG_H / 2, EGG_W / 2, EGG_H / 2, 0, 0, Math.PI * 2);
         ctx.fill();
-        // 裂纹
-        ctx.strokeStyle = '#3a5a3a';
-        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = '#3a5a3a'; ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.moveTo(x + 4, y + 8);
-        ctx.lineTo(x + 12, y + 12);
-        ctx.lineTo(x + 8, y + 20);
+        ctx.moveTo(x + 4, y + 8); ctx.lineTo(x + 12, y + 12); ctx.lineTo(x + 8, y + 20);
         ctx.stroke();
       } else if (egg.type === 'diamond') {
-        // 钻石蛋画成多边形
         ctx.fillStyle = DIAMOND_COLOR;
         ctx.beginPath();
         ctx.moveTo(x + EGG_W / 2, y);
@@ -376,28 +327,23 @@ canvas.addEventListener('touchend', (e) => {
       }
     });
 
-    // 画玩家（像素风 Charles）
     const px = playerLane * LANE_WIDTH + LANE_WIDTH / 2;
     const py = PLAYER_Y;
 
-    // 身体：青色方块
     ctx.fillStyle = '#3aa0a0';
     ctx.fillRect(px - PLAYER_W / 2, py - PLAYER_H / 2, PLAYER_W, PLAYER_H);
 
-    // 头部：白色圆
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
     ctx.arc(px, py - PLAYER_H / 2 - 6, 12, 0, Math.PI * 2);
     ctx.fill();
 
-    // 眼睛
     ctx.fillStyle = '#000';
     ctx.beginPath();
     ctx.arc(px - 4, py - PLAYER_H / 2 - 8, 2.5, 0, Math.PI * 2);
     ctx.arc(px + 4, py - PLAYER_H / 2 - 8, 2.5, 0, Math.PI * 2);
     ctx.fill();
 
-    // 篮子（简单线条）
     ctx.strokeStyle = '#aa8844';
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -410,18 +356,33 @@ canvas.addEventListener('touchend', (e) => {
     ctx.lineTo(px + 12, py - PLAYER_H / 2 - 20);
     ctx.stroke();
 
-    // 如果游戏结束，画个红色覆盖
+    // Частицы
+    particles.forEach(p => {
+      ctx.globalAlpha = p.life;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+    });
+    ctx.globalAlpha = 1;
+
     if (gameOver) {
       ctx.fillStyle = 'rgba(150, 0, 0, 0.25)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
     }
     if (roundComplete) {
       ctx.fillStyle = 'rgba(0, 150, 0, 0.15)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
     }
+
+    if (flash > 0.01) {
+      ctx.fillStyle = `rgba(255, 40, 40, ${flash})`;
+      ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
+      flash *= 0.88;
+      if (flash < 0.01) flash = 0;
+    }
+
+    ctx.restore();
   }
 
-  // 初始绘制
   draw();
 </script>
 </body>
