@@ -89,15 +89,12 @@
   let spawnInterval = null;
   let currentSpawnMs = 700;
 
-  // Комбо
   let combo = 0;
   let comboBest = 0;
 
-  // Пасхалка CHEATER
   let cheaterMode = false;
   let cheaterLabels = [];
 
-  // Анимация Чарльза
   let charlesBob = 0;
   let charlesScared = 0;
 
@@ -211,25 +208,39 @@
     requestAnimationFrame(gameLoop);
   }
 
+  // Плавный рост порога: 100, 140, 180, 220...
   function scoreForNextRound() {
-    return 80 + (round - 1) * 60;
+    return 100 + (round - 1) * 40;
   }
 
   function startSpawning() {
     if (spawnInterval) clearInterval(spawnInterval);
-    currentSpawnMs = Math.max(280, 700 - (round - 1) * 70);
+
+    // Разминка: до 3-го раунда интервал почти не падает
+    const warmup = Math.min(round, 3);
+    currentSpawnMs = Math.max(380, 700 - (warmup - 1) * 40);
+
     spawnInterval = setInterval(() => {
       if (!running || gameOver) return;
       const lane = Math.floor(Math.random() * LANES);
       const r = Math.random();
+
+      // Гнилых мягко: 28% → +5% за раунд → максимум 45%
+      const rottenChance = Math.min(0.45, 0.28 + (round - 1) * 0.05);
+      const goldChance = 0.05;
+      const bombChance = 0.04;
+      const diamondChance = 0.1;
+
       let type;
-      if (r < 0.04) type = 'bomb';
-      else if (r < 0.09) type = 'gold';
-      else if (r < 0.09 + Math.min(0.55, 0.28 + (round - 1) * 0.07)) type = 'rotten';
-      else if (r < 0.09 + Math.min(0.55, 0.28 + (round - 1) * 0.07) + 0.1) type = 'diamond';
+      if (r < bombChance) type = 'bomb';
+      else if (r < bombChance + goldChance) type = 'gold';
+      else if (r < bombChance + goldChance + rottenChance) type = 'rotten';
+      else if (r < bombChance + goldChance + rottenChance + diamondChance) type = 'diamond';
       else type = 'normal';
 
-      const baseSpeed = 2.2 + Math.random() * 1.2 + (round - 1) * 0.5;
+      // Скорость: первые 3 раунда без ускорения, дальше +0.3 за раунд
+      const speedBoost = Math.max(0, round - 3) * 0.3;
+      const baseSpeed = 2.2 + Math.random() * 1.2 + speedBoost;
       eggs.push({ lane: lane, y: -EGG_H, type: type, speed: baseSpeed });
     }, currentSpawnMs);
   }
@@ -287,7 +298,6 @@
           if (lives <= 0) { triggerGameOver(); return; }
           continue;
         } else {
-          // Поймали хорошее
           let points = 10;
           if (egg.type === 'diamond') points = 20;
           if (egg.type === 'gold') {
@@ -306,7 +316,6 @@
           combo++;
           if (combo > comboBest) comboBest = combo;
 
-          // Комбо-бонус каждые 5 подряд
           if (combo > 0 && combo % 5 === 0) {
             score += 30;
             sfxCombo();
@@ -341,7 +350,9 @@
       round++;
       updateHUD();
       startSpawning();
-      messageEl.textContent = `Раунд ${round}! Яйца быстрее, гнилых больше.`;
+      messageEl.textContent = round <= 3
+        ? `Раунд ${round}. Разминка продолжается.`
+        : `Раунд ${round}! Постепенно ускоряемся.`;
       triggerFlash(0.2);
     }
   }
@@ -443,7 +454,6 @@
         ctx.closePath();
         ctx.fill();
       } else if (egg.type === 'gold') {
-        // Золотое яйцо — эллипс с блеском
         ctx.fillStyle = GOLD_COLOR;
         ctx.beginPath();
         ctx.ellipse(x + EGG_W / 2, y + EGG_H / 2, EGG_W / 2, EGG_H / 2, 0, 0, Math.PI * 2);
@@ -453,7 +463,6 @@
         ctx.ellipse(x + EGG_W / 2 - 4, y + EGG_H / 2 - 5, 3, 5, 0, 0, Math.PI * 2);
         ctx.fill();
       } else if (egg.type === 'bomb') {
-        // Бомба — тёмный круг с фитилём
         ctx.fillStyle = BOMB_COLOR;
         ctx.beginPath();
         ctx.arc(x + EGG_W / 2, y + EGG_H / 2, EGG_W / 2 + 2, 0, Math.PI * 2);
@@ -464,7 +473,6 @@
         ctx.moveTo(x + EGG_W / 2, y);
         ctx.lineTo(x + EGG_W / 2 + 4, y - 8);
         ctx.stroke();
-        // Искра
         ctx.fillStyle = '#ffaa00';
         ctx.beginPath();
         ctx.arc(x + EGG_W / 2 + 4, y - 8, 3, 0, Math.PI * 2);
@@ -476,24 +484,20 @@
     const py = PLAYER_Y + Math.sin(charlesBob) * 2;
     const eyeOffset = charlesScared > 0 ? 1.5 : 0;
 
-    // Тело
     ctx.fillStyle = '#3aa0a0';
     ctx.fillRect(px - PLAYER_W / 2, py - PLAYER_H / 2, PLAYER_W, PLAYER_H);
 
-    // Голова
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
     ctx.arc(px, py - PLAYER_H / 2 - 6, 12, 0, Math.PI * 2);
     ctx.fill();
 
-    // Глаза
     ctx.fillStyle = '#000';
     ctx.beginPath();
     ctx.arc(px - 4, py - PLAYER_H / 2 - 8, 2.5 + eyeOffset, 0, Math.PI * 2);
     ctx.arc(px + 4, py - PLAYER_H / 2 - 8, 2.5 + eyeOffset, 0, Math.PI * 2);
     ctx.fill();
 
-    // Корзина
     ctx.strokeStyle = '#aa8844';
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -506,7 +510,6 @@
     ctx.lineTo(px + 12, py - PLAYER_H / 2 - 20);
     ctx.stroke();
 
-    // Частицы
     particles.forEach(p => {
       ctx.globalAlpha = p.life;
       ctx.fillStyle = p.color;
@@ -519,7 +522,6 @@
       ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
     }
 
-    // Пасхалка CHEATER
     if (cheaterMode) {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
       ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
