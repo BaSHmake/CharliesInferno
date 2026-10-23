@@ -13,7 +13,7 @@
   .game-container {
     background: #222; padding: 15px; border-radius: 12px;
     box-shadow: 0 0 40px rgba(0,255,0,0.1); text-align: center;
-    width: 100%; max-width: 440px;
+    width: 100%; max-width: 440px; position: relative;
   }
   canvas { display: block; margin: 0 auto; background: #1a1a1a; border: 2px solid #444; border-radius: 8px; touch-action: none; width: 100%; max-width: 400px; height: auto; }
   .hud {
@@ -46,61 +46,59 @@
   /* Экран выбора режима */
   .mode-screen {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(20, 20, 20, 0.95); display: flex; flex-direction: column;
+    background: rgba(20, 20, 20, 0.97); display: flex; flex-direction: column;
     align-items: center; justify-content: center; border-radius: 12px; z-index: 10;
+    padding: 20px; overflow-y: auto;
   }
-  .mode-screen h2 { margin: 0 0 15px; color: #fff; font-size: 22px; }
+  .mode-screen h2 { margin: 0 0 15px; color: #fff; font-size: 20px; }
+  .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 360px; }
   .mode-btn {
-    width: 80%; margin: 6px 0; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold;
-    cursor: pointer; border: 2px solid #555; transition: 0.2s; text-align: left;
+    padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold;
+    cursor: pointer; border: 2px solid #555; transition: 0.2s; text-align: center;
   }
-  .mode-btn:hover { transform: scale(1.02); }
-  .mode-btn small { display: block; font-size: 11px; font-weight: normal; margin-top: 4px; opacity: 0.8; }
+  .mode-btn:hover { transform: scale(1.03); }
+  .mode-btn small { display: block; font-size: 10px; font-weight: normal; margin-top: 4px; opacity: 0.8; }
   
   .mode-classic { background: #1a3a1a; border-color: #4a4; color: #ccffcc; }
   .mode-hardcore { background: #3a1a1a; border-color: #a33; color: #ffcccc; }
   .mode-chaos { background: #3a2a1a; border-color: #ca3; color: #ffeebb; }
-  
+  .mode-one { background: #1a1a3a; border-color: #44a; color: #ccccff; }
+  .mode-five { background: #2a1a3a; border-color: #a4f; color: #f0ccff; }
+  .mode-double { background: #3a1a2a; border-color: #f4a; color: #ffccf0; }
+
   @media (max-width: 420px) {
     .game-container { padding: 8px; }
     .hud { font-size: 14px; }
+    .mode-screen h2 { font-size: 18px; }
+    .mode-btn { font-size: 12px; padding: 8px; }
   }
 </style>
 </head>
 <body>
-<div class="game-container" style="position: relative;">
-  <!-- HUD -->
+<div class="game-container">
   <div class="hud">
     <div class="lives"><span>❤</span><span id="livesDisplay">❤❤❤</span></div>
     <div class="round">Раунд <span id="roundDisplay">1</span></div>
     <div>Очки: <span id="scoreDisplay">0</span></div>
   </div>
   
-  <!-- Игровое поле -->
   <canvas id="gameCanvas" width="400" height="500"></canvas>
   
-  <!-- Тексты -->
   <div class="msg" id="message"><span class="charles-face"><span class="charles-eye-line"></span></span> Выберите режим</div>
-  <div class="record" id="recordText">🏆 Рекорд (Классика): 0</div>
+  <div class="record" id="recordText">🏆 Рекорд: 0</div>
   <div class="combo" id="comboDisplay"></div>
   
-  <!-- Кнопка старта -->
   <button id="startBtn" style="display:none;">Начать / Заново</button>
 
-  <!-- Экран выбора режима -->
   <div class="mode-screen" id="modeScreen">
     <h2>Выберите режим</h2>
-    <div class="mode-btn mode-classic" onclick="selectMode('classic')">
-      🟢 КЛАССИКА
-      <small>Сбалансированная игра с разминкой.</small>
-    </div>
-    <div class="mode-btn mode-hardcore" onclick="selectMode('hardcore')">
-      🔴 ХАРДКОР (БЕЗДНА)
-      <small>Без разминки. Яйца ускоряются бесконечно.</small>
-    </div>
-    <div class="mode-btn mode-chaos" onclick="selectMode('chaos')">
-      🌪️ ХАОС
-      <small>Быстрее, чаще, иногда по два яйца сразу.</small>
+    <div class="mode-grid">
+      <div class="mode-btn mode-classic" onclick="selectMode('classic')">🟢 КЛАССИКА<small>Обычная игра</small></div>
+      <div class="mode-btn mode-hardcore" onclick="selectMode('hardcore')">🔴 ХАРДКОР<small>Без разминки</small></div>
+      <div class="mode-btn mode-chaos" onclick="selectMode('chaos')">🌪️ ХАОС<small>Двойные яйца</small></div>
+      <div class="mode-btn mode-one" onclick="selectMode('one')">💀 JUST ONE<small>1 жизнь, без золота</small></div>
+      <div class="mode-btn mode-five" onclick="selectMode('five')">🖐️ 5X<small>5 дорожек</small></div>
+      <div class="mode-btn mode-double" onclick="selectMode('double')">👥 ДВОЙНАЯ<small>2 Чарльза</small></div>
     </div>
   </div>
 </div>
@@ -117,22 +115,28 @@
   const modeScreen = document.getElementById('modeScreen');
   const startBtn = document.getElementById('startBtn');
 
-  const LANES = 3;
-  const LANE_WIDTH = canvas.width / LANES;
+  // Базовые константы
   const PLAYER_Y = canvas.height - 60;
-  const PLAYER_W = 36;
-  const PLAYER_H = 36;
-  const EGG_W = 20;
-  const EGG_H = 26;
+  const PLAYER_W = 30; // Чуть уменьшили, чтобы влезало в 5 дорожек
+  const PLAYER_H = 30;
+  const EGG_W = 18;
+  const EGG_H = 22;
+  
   const ROTTEN_COLOR = '#6a8a6a';
   const EGG_COLOR = '#f0e8d0';
   const DIAMOND_COLOR = '#aaf0ff';
   const GOLD_COLOR = '#ffd700';
   const BOMB_COLOR = '#3a1a1a';
 
-  // Состояние
+  // Динамические переменные (зависят от режима)
   let currentMode = 'classic';
-  let playerLane = 1;
+  let LANES = 3;
+  let LANE_WIDTH = canvas.width / LANES;
+  let isDouble = false;
+
+  // Состояние
+  let playerLane = 1;  // Для обычных режимов
+  let player2Lane = 1; // Для режима "Двойная проблема" (правая половина)
   let lives = 3;
   let round = 1;
   let score = 0;
@@ -149,14 +153,9 @@
   let charlesBob = 0;
   let charlesScared = 0;
 
-  // Рекорды для каждого режима
-  let records = {
-    classic: parseInt(localStorage.getItem('charlesEgg_classic') || '0', 10),
-    hardcore: parseInt(localStorage.getItem('charlesEgg_hardcore') || '0', 10),
-    chaos: parseInt(localStorage.getItem('charlesEgg_chaos') || '0', 10)
-  };
+  let records = JSON.parse(localStorage.getItem('charlesEgg_records') || '{"classic":0,"hardcore":0,"chaos":0,"one":0,"five":0,"double":0}');
 
-  // ===== ЭФФЕКТЫ (Звук, частицы, тряска) =====
+  // ===== ЭФФЕКТЫ =====
   let audioCtx = null;
   function ensureAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -166,8 +165,7 @@
     if (!audioCtx) return;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    osc.type = type;
-    osc.frequency.value = freq;
+    osc.type = type; osc.frequency.value = freq;
     gain.gain.setValueAtTime(volume, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
     osc.connect(gain); gain.connect(audioCtx.destination);
@@ -203,27 +201,56 @@
   // ===== УПРАВЛЕНИЕ =====
   document.addEventListener('keydown', (e) => {
     if (!running || gameOver) return;
-    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') playerLane = (playerLane + LANES - 1) % LANES;
-    else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') playerLane = (playerLane + 1) % LANES;
+    if (isDouble) {
+      // В двойном режиме A/D управляют левым, стрелки - правым
+      if (e.key === 'a' || e.key === 'A' || e.key === 'ф' || e.key === 'Ф') playerLane = (playerLane + 1) % 2; // 0 или 1
+      if (e.key === 'd' || e.key === 'D' || e.key === 'в' || e.key === 'В') playerLane = (playerLane + 1) % 2; // переключение между 2 дорожками
+      // Для простоты в двойном режиме левый переключается между дорожками 0 и 1.
+      // Правый между 2 и 3 (или 0 и 1 внутри своей половины)
+      if (e.key === 'ArrowLeft') player2Lane = (player2Lane + 1) % 2;
+      if (e.key === 'ArrowRight') player2Lane = (player2Lane + 1) % 2;
+    } else {
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A' || e.key === 'ф' || e.key === 'Ф') playerLane = (playerLane + LANES - 1) % LANES;
+      else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D' || e.key === 'в' || e.key === 'В') playerLane = (playerLane + 1) % LANES;
+    }
   });
 
   let touchStartX = null;
+  let touchStartY = null;
   canvas.addEventListener('touchstart', (e) => {
     if (!running || gameOver) return;
     touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
     e.preventDefault();
   }, { passive: false });
+  
   canvas.addEventListener('touchend', (e) => {
     if (!running || gameOver || touchStartX === null) return;
     const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
     const deltaX = touchEndX - touchStartX;
-    if (Math.abs(deltaX) > 30) {
-      playerLane = deltaX < 0 ? (playerLane + LANES - 1) % LANES : (playerLane + 1) % LANES;
+    const rect = canvas.getBoundingClientRect();
+    const tapX = (touchEndX - rect.left) * (canvas.width / rect.width);
+    
+    if (isDouble) {
+      // Левая половина экрана управляет левым Чарльзом, правая - правым
+      const isLeftSide = touchStartX < rect.left + rect.width / 2;
+      if (Math.abs(deltaX) > 20) {
+        if (isLeftSide) playerLane = (playerLane + 1) % 2;
+        else player2Lane = (player2Lane + 1) % 2;
+      } else {
+        // Тап по дорожке
+        const tappedLane = Math.floor(tapX / (canvas.width / 4));
+        if (isLeftSide && tappedLane < 2) playerLane = tappedLane;
+        else if (!isLeftSide && tappedLane >= 2) player2Lane = tappedLane - 2;
+      }
     } else {
-      const rect = canvas.getBoundingClientRect();
-      const tapX = (touchEndX - rect.left) * (canvas.width / rect.width);
-      const tappedLane = Math.floor(tapX / LANE_WIDTH);
-      if (tappedLane >= 0 && tappedLane < LANES) playerLane = tappedLane;
+      if (Math.abs(deltaX) > 25) {
+        playerLane = deltaX < 0 ? (playerLane + LANES - 1) % LANES : (playerLane + 1) % LANES;
+      } else {
+        const tappedLane = Math.floor(tapX / LANE_WIDTH);
+        if (tappedLane >= 0 && tappedLane < LANES) playerLane = tappedLane;
+      }
     }
     touchStartX = null;
     e.preventDefault();
@@ -232,6 +259,22 @@
   // ===== ВЫБОР РЕЖИМА =====
   window.selectMode = function(mode) {
     currentMode = mode;
+    isDouble = (mode === 'double');
+    
+    // Настройка дорожек
+    if (mode === 'five') LANES = 5;
+    else if (mode === 'double') LANES = 4;
+    else LANES = 3;
+    LANE_WIDTH = canvas.width / LANES;
+    
+    // Настройка жизней
+    if (mode === 'one') lives = 1;
+    else lives = 3;
+
+    playerLane = Math.floor(LANES / 2) - (isDouble ? 1 : 0);
+    if (playerLane < 0) playerLane = 0;
+    player2Lane = 0;
+
     modeScreen.style.display = 'none';
     startBtn.style.display = 'inline-block';
     updateRecordDisplay();
@@ -240,8 +283,8 @@
   };
 
   function updateRecordDisplay() {
-    const names = { classic: 'Классика', hardcore: 'Хардкор', chaos: 'Хаос' };
-    recordText.textContent = `🏆 Рекорд (${names[currentMode]}): ${records[currentMode]}`;
+    const names = { classic: 'Классика', hardcore: 'Хардкор', chaos: 'Хаос', one: 'Just One', five: '5X', double: 'Двойная' };
+    recordText.textContent = `🏆 Рекорд (${names[currentMode]}): ${records[currentMode] || 0}`;
   }
 
   startBtn.addEventListener('click', startGame);
@@ -250,10 +293,16 @@
   function startGame() {
     ensureAudio();
     if (spawnInterval) clearInterval(spawnInterval);
-    playerLane = 1; lives = 3; round = 1; score = 0;
+    
+    // Сброс
+    playerLane = isDouble ? 0 : Math.floor(LANES / 2);
+    player2Lane = 0;
+    lives = (currentMode === 'one') ? 1 : 3;
+    round = 1; score = 0;
     eggs = []; particles = []; shake = 0; flash = 0;
     combo = 0; comboBest = 0;
     cheaterMode = false; cheaterLabels = []; charlesScared = 0;
+    
     running = true; gameOver = false;
     updateHUD();
     comboDisplay.textContent = '';
@@ -263,9 +312,9 @@
   }
 
   function scoreForNextRound() {
-    if (currentMode === 'classic') return 100 + (round - 1) * 40;
-    if (currentMode === 'hardcore') return 80 + (round - 1) * 50; // Быстрее летят, быстрее растут очки
-    return 80 + (round - 1) * 40; // Chaos
+    if (currentMode === 'one') return 50 + (round - 1) * 30; // Медленнее растёт, т.к. 1 жизнь
+    if (currentMode === 'five') return 100 + (round - 1) * 40;
+    return 100 + (round - 1) * 40;
   }
 
   function startSpawning() {
@@ -274,49 +323,55 @@
     let baseMs = 700;
     if (currentMode === 'hardcore') baseMs = 600;
     if (currentMode === 'chaos') baseMs = 550;
-
-    // Интервал
-    let dropRate = 40;
-    if (currentMode === 'hardcore') dropRate = 50;
+    if (currentMode === 'double') baseMs = 650;
     
-    // В хардкоре нет разминки, в классике есть до 3 раунда
     const warmup = currentMode === 'classic' ? Math.min(round, 3) : round;
-    currentSpawnMs = Math.max(250, baseMs - (warmup - 1) * dropRate);
+    currentSpawnMs = Math.max(250, baseMs - (warmup - 1) * 40);
 
     spawnInterval = setInterval(() => {
       if (!running || gameOver) return;
       
       const r = Math.random();
-      const rottenChance = currentMode === 'hardcore' 
-        ? Math.min(0.70, 0.30 + (round - 1) * 0.06) // Злее
-        : Math.min(0.45, 0.28 + (round - 1) * 0.05);
+      let rottenChance = Math.min(0.45, 0.28 + (round - 1) * 0.05);
+      if (currentMode === 'one') rottenChance = Math.min(0.35, 0.20 + (round - 1) * 0.04); // Чуть добрее, ведь 1 жизнь
+      if (currentMode === 'hardcore') rottenChance = Math.min(0.70, 0.30 + (round - 1) * 0.06);
       
       let type;
-      if (r < 0.04) type = 'bomb';
-      else if (r < 0.09) type = 'gold';
+      if (currentMode !== 'one' && r < 0.04) type = 'bomb';
+      else if (currentMode !== 'one' && r < 0.09) type = 'gold';
       else if (r < 0.09 + rottenChance) type = 'rotten';
       else if (r < 0.09 + rottenChance + 0.10) type = 'diamond';
       else type = 'normal';
 
       let speedBoost = 0;
-      if (currentMode === 'classic') speedBoost = Math.max(0, round - 3) * 0.3;
-      else if (currentMode === 'hardcore') speedBoost = (round - 1) * 0.5; // Без предела!
+      if (currentMode === 'hardcore') speedBoost = (round - 1) * 0.5;
       else if (currentMode === 'chaos') speedBoost = (round - 1) * 0.4;
+      else speedBoost = Math.max(0, round - 3) * 0.3;
 
       const speed = 2.2 + Math.random() * 1.2 + speedBoost;
+      
+      // Для 5 дорожек яйца падают чуть медленнее, чтобы успевать
+      const finalSpeed = currentMode === 'five' ? speed * 0.85 : speed;
+
       const lane1 = Math.floor(Math.random() * LANES);
       
-      eggs.push({ lane: lane1, y: -EGG_H, type: type, speed: speed });
-
-      // В хаосе иногда падают два яйца сразу
-      if (currentMode === 'chaos' && Math.random() < 0.25 && round > 2) {
-        let lane2 = Math.floor(Math.random() * LANES);
-        while (lane2 === lane1) lane2 = Math.floor(Math.random() * LANES); // другая дорожка
-        const r2 = Math.random();
-        let type2 = r2 < 0.15 ? 'rotten' : 'normal';
-        eggs.push({ lane: lane2, y: -EGG_H - 40, type: type2, speed: speed * 0.9 });
+      // В "Двойной проблеме" яйца падают только в своей половине
+      // Левая половина (0 и 1) и правая (2 и 3)
+      let actualLane = lane1;
+      if (isDouble) {
+        const isLeft = Math.random() < 0.5;
+        if (isLeft) actualLane = Math.floor(Math.random() * 2); // 0 или 1
+        else actualLane = Math.floor(Math.random() * 2) + 2;    // 2 или 3
       }
 
+      eggs.push({ lane: actualLane, y: -EGG_H, type: type, speed: finalSpeed });
+
+      // Хаос: двойные яйца
+      if (currentMode === 'chaos' && Math.random() < 0.25 && round > 2) {
+        let lane2 = Math.floor(Math.random() * LANES);
+        while (lane2 === lane1) lane2 = Math.floor(Math.random() * LANES);
+        eggs.push({ lane: lane2, y: -EGG_H - 40, type: Math.random() < 0.15 ? 'rotten' : 'normal', speed: finalSpeed * 0.9 });
+      }
     }, currentSpawnMs);
   }
 
@@ -333,6 +388,57 @@
     requestAnimationFrame(gameLoop);
   }
 
+  // Проверка ловли яйца конкретным игроком
+  function checkCatch(egg, pLane, pOffsetX = 0, pWidth = canvas.width) {
+    const eggCenterX = egg.lane * LANE_WIDTH + LANE_WIDTH / 2;
+    const playerCenterX = pOffsetX + pLane * LANE_WIDTH + LANE_WIDTH / 2;
+    const playerTop = PLAYER_Y - PLAYER_H / 2;
+    const playerBottom = PLAYER_Y + PLAYER_H / 2;
+    
+    return (egg.y + EGG_H >= playerTop && egg.y <= playerBottom &&
+            Math.abs(eggCenterX - playerCenterX) < LANE_WIDTH * 0.4);
+  }
+
+  function handleCatch(egg, eggCenterX) {
+    if (egg.type === 'rotten') {
+      lives--; if (lives < 0) lives = 0;
+      combo = 0; updateHUD();
+      sfxRotten(); triggerShake(8); triggerFlash(0.6); charlesScared = 1;
+      if (navigator.vibrate) navigator.vibrate(120);
+      spawnParticles(eggCenterX, PLAYER_Y - PLAYER_H / 2, '#6a8a6a');
+      if (lives <= 0) return true;
+    } else if (egg.type === 'bomb') {
+      lives -= 2; if (lives < 0) lives = 0;
+      combo = 0; updateHUD();
+      sfxBomb(); triggerShake(18); triggerFlash(1); charlesScared = 1;
+      if (navigator.vibrate) navigator.vibrate([200, 80, 200]);
+      spawnParticles(eggCenterX, PLAYER_Y - PLAYER_H / 2, '#ff4400', 20);
+      if (lives <= 0) return true;
+    } else {
+      let points = 10;
+      if (egg.type === 'diamond') points = 20;
+      if (egg.type === 'gold') {
+        points = 15; if (lives < 5) { lives++; updateHUD(); }
+        sfxGold(); spawnParticles(eggCenterX, PLAYER_Y - PLAYER_H / 2, GOLD_COLOR, 15);
+      } else if (egg.type === 'diamond') {
+        sfxDiamond(); spawnParticles(eggCenterX, PLAYER_Y - PLAYER_H / 2, DIAMOND_COLOR);
+      } else {
+        sfxCatch(); spawnParticles(eggCenterX, PLAYER_Y - PLAYER_H / 2, EGG_COLOR);
+      }
+      score += points; combo++;
+      if (combo > comboBest) comboBest = combo;
+      if (combo > 0 && combo % 5 === 0) {
+        score += 30; sfxCombo();
+        comboDisplay.textContent = `🔥 Комбо x${combo}! +30`;
+        triggerFlash(0.15);
+      } else {
+        comboDisplay.textContent = combo > 1 ? `Комбо: ${combo}` : '';
+      }
+      updateHUD();
+    }
+    return false;
+  }
+
   function update() {
     if (gameOver) return;
     updateParticles();
@@ -343,54 +449,25 @@
       const egg = eggs[i];
       egg.y += egg.speed;
       const eggCenterX = egg.lane * LANE_WIDTH + LANE_WIDTH / 2;
-      const playerCenterX = playerLane * LANE_WIDTH + LANE_WIDTH / 2;
-      const playerTop = PLAYER_Y - PLAYER_H / 2;
-      const playerBottom = PLAYER_Y + PLAYER_H / 2;
+      let caught = false;
 
-      if (egg.y + EGG_H >= playerTop && egg.y <= playerBottom && Math.abs(eggCenterX - playerCenterX) < LANE_WIDTH * 0.4) {
-        if (egg.type === 'rotten') {
-          lives--; if (lives < 0) lives = 0;
-          combo = 0; updateHUD();
-          sfxRotten(); triggerShake(8); triggerFlash(0.6); charlesScared = 1;
-          if (navigator.vibrate) navigator.vibrate(120);
-          spawnParticles(eggCenterX, playerTop, '#6a8a6a');
-          eggs.splice(i, 1);
-          if (lives <= 0) { triggerGameOver(); return; }
-          continue;
-        } else if (egg.type === 'bomb') {
-          lives -= 2; if (lives < 0) lives = 0;
-          combo = 0; updateHUD();
-          sfxBomb(); triggerShake(18); triggerFlash(1); charlesScared = 1;
-          if (navigator.vibrate) navigator.vibrate([200, 80, 200]);
-          spawnParticles(eggCenterX, playerTop, '#ff4400', 20);
-          eggs.splice(i, 1);
-          if (lives <= 0) { triggerGameOver(); return; }
-          continue;
-        } else {
-          let points = 10;
-          if (egg.type === 'diamond') points = 20;
-          if (egg.type === 'gold') {
-            points = 15; if (lives < 5) { lives++; updateHUD(); }
-            sfxGold(); spawnParticles(eggCenterX, playerTop, GOLD_COLOR, 15);
-          } else if (egg.type === 'diamond') {
-            sfxDiamond(); spawnParticles(eggCenterX, playerTop, DIAMOND_COLOR);
-          } else {
-            sfxCatch(); spawnParticles(eggCenterX, playerTop, EGG_COLOR);
-          }
-          score += points; combo++;
-          if (combo > comboBest) comboBest = combo;
-          if (combo > 0 && combo % 5 === 0) {
-            score += 30; sfxCombo();
-            comboDisplay.textContent = `🔥 Комбо x${combo}! +30`;
-            triggerFlash(0.15);
-          } else {
-            comboDisplay.textContent = combo > 1 ? `Комбо: ${combo}` : '';
-          }
-          updateHUD(); eggs.splice(i, 1);
-          continue;
-        }
+      if (isDouble) {
+        // Проверяем левого Чарльза (дорог 2, смещение 0)
+        if (checkCatch(egg, playerLane, 0, canvas.width / 2)) caught = true;
+        // Проверяем правого Чарльза (дорог 2, смещение canvas.width / 2)
+        else if (checkCatch(egg, player2Lane, canvas.width / 2, canvas.width / 2)) caught = true;
+      } else {
+        if (checkCatch(egg, playerLane, 0, canvas.width)) caught = true;
       }
 
+      if (caught) {
+        const isDead = handleCatch(egg, eggCenterX);
+        eggs.splice(i, 1);
+        if (isDead) { triggerGameOver(); return; }
+        continue;
+      }
+
+      // Пропуск яйца
       if (egg.y > canvas.height + 20) {
         if (egg.type !== 'rotten' && egg.type !== 'bomb') {
           lives--; if (lives < 0) lives = 0;
@@ -407,13 +484,7 @@
       round++;
       updateHUD();
       startSpawning();
-      if (currentMode === 'hardcore') {
-        messageEl.textContent = `Раунд ${round}. Бездна смотрит на тебя.`;
-      } else if (currentMode === 'chaos') {
-        messageEl.textContent = `Раунд ${round}. Всё летит быстрее!`;
-      } else {
-        messageEl.textContent = round <= 3 ? `Раунд ${round}. Разминка.` : `Раунд ${round}! Ускоряемся.`;
-      }
+      messageEl.textContent = `Раунд ${round}!`;
       triggerFlash(0.2);
     }
   }
@@ -425,14 +496,14 @@
     sfxGameOver(); triggerShake(15); triggerFlash(0.8);
     if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
 
-    if (score > records[currentMode]) {
+    if (score > (records[currentMode] || 0)) {
       records[currentMode] = score;
-      localStorage.setItem('charlesEgg_' + currentMode, score);
+      localStorage.setItem('charlesEgg_records', JSON.stringify(records));
       sfxRecord();
       updateRecordDisplay();
       messageEl.textContent = `🏆 Новый рекорд: ${score}! Комбо: ${comboBest}.`;
     } else {
-      messageEl.textContent = `💀 Конец! Очки: ${score}. Рекорд: ${records[currentMode]}.`;
+      messageEl.textContent = `💀 Конец! Очки: ${score}. Рекорд: ${records[currentMode] || 0}.`;
     }
   }
 
@@ -448,23 +519,48 @@
     messageEl.textContent = '💀 CHEATER! Чарльз знает. Нажми «Начать / Заново».';
   }
 
+  // Рисование Чарльза
+  function drawCharles(px, py, isScared, headOnly = false) {
+    const eyeOffset = isScared > 0 ? 1.5 : 0;
+    if (!headOnly) {
+      ctx.fillStyle = '#3aa0a0';
+      ctx.fillRect(px - PLAYER_W / 2, py - PLAYER_H / 2, PLAYER_W, PLAYER_H);
+    }
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(px, py - PLAYER_H / 2 - 6, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.arc(px - 3, py - PLAYER_H / 2 - 8, 2 + eyeOffset, 0, Math.PI * 2);
+    ctx.arc(px + 3, py - PLAYER_H / 2 - 8, 2 + eyeOffset, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#aa8844'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(px, py - PLAYER_H / 2 - 20, 8, 0, Math.PI); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(px - 10, py - PLAYER_H / 2 - 18); ctx.lineTo(px - 10, py - PLAYER_H / 2 - 10); ctx.lineTo(px + 10, py - PLAYER_H / 2 - 10); ctx.lineTo(px + 10, py - PLAYER_H / 2 - 18); ctx.stroke();
+  }
+
   function draw() {
     ctx.save();
     if (shake > 0.5) {
-      const dx = (Math.random() - 0.5) * shake;
-      const dy = (Math.random() - 0.5) * shake;
-      ctx.translate(dx, dy);
+      ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
       shake *= 0.85; if (shake < 0.5) shake = 0;
     }
     ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
 
+    // Рисуем дорожки
     for (let i = 0; i <= LANES; i++) {
       ctx.beginPath(); ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
       ctx.moveTo(i * LANE_WIDTH, 0); ctx.lineTo(i * LANE_WIDTH, canvas.height);
       ctx.stroke();
     }
 
+    // В двойном режиме разделительная линия посередине
+    if (isDouble) {
+      ctx.beginPath(); ctx.strokeStyle = '#ff4444'; ctx.lineWidth = 2;
+      ctx.moveTo(canvas.width / 2, 0); ctx.lineTo(canvas.width / 2, canvas.height);
+      ctx.stroke();
+    }
+
+    // Яйца
     eggs.forEach(egg => {
       const x = egg.lane * LANE_WIDTH + LANE_WIDTH / 2 - EGG_W / 2;
       const y = egg.y;
@@ -474,13 +570,13 @@
       } else if (egg.type === 'rotten') {
         ctx.fillStyle = ROTTEN_COLOR; ctx.beginPath(); ctx.ellipse(x + EGG_W / 2, y + EGG_H / 2, EGG_W / 2, EGG_H / 2, 0, 0, Math.PI * 2); ctx.fill();
         ctx.strokeStyle = '#3a5a3a'; ctx.lineWidth = 1.5; ctx.beginPath();
-        ctx.moveTo(x + 4, y + 8); ctx.lineTo(x + 12, y + 12); ctx.lineTo(x + 8, y + 20); ctx.stroke();
+        ctx.moveTo(x + 4, y + 8); ctx.lineTo(x + 10, y + 10); ctx.lineTo(x + 7, y + 18); ctx.stroke();
       } else if (egg.type === 'diamond') {
         ctx.fillStyle = DIAMOND_COLOR; ctx.beginPath();
         ctx.moveTo(x + EGG_W / 2, y); ctx.lineTo(x + EGG_W, y + EGG_H / 2); ctx.lineTo(x + EGG_W / 2, y + EGG_H); ctx.lineTo(x, y + EGG_H / 2); ctx.closePath(); ctx.fill();
       } else if (egg.type === 'gold') {
         ctx.fillStyle = GOLD_COLOR; ctx.beginPath(); ctx.ellipse(x + EGG_W / 2, y + EGG_H / 2, EGG_W / 2, EGG_H / 2, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.ellipse(x + EGG_W / 2 - 4, y + EGG_H / 2 - 5, 3, 5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.ellipse(x + EGG_W / 2 - 4, y + EGG_H / 2 - 4, 2, 4, 0, 0, Math.PI * 2); ctx.fill();
       } else if (egg.type === 'bomb') {
         ctx.fillStyle = BOMB_COLOR; ctx.beginPath(); ctx.arc(x + EGG_W / 2, y + EGG_H / 2, EGG_W / 2 + 2, 0, Math.PI * 2); ctx.fill();
         ctx.strokeStyle = '#ff4400'; ctx.lineWidth = 2; ctx.beginPath();
@@ -489,18 +585,18 @@
       }
     });
 
-    const px = playerLane * LANE_WIDTH + LANE_WIDTH / 2;
+    // Чарльзы
     const py = PLAYER_Y + Math.sin(charlesBob) * 2;
-    const eyeOffset = charlesScared > 0 ? 1.5 : 0;
+    if (isDouble) {
+      // Левый Чарльз (0..1)
+      drawCharles(playerLane * LANE_WIDTH + LANE_WIDTH / 2, py, charlesScared);
+      // Правый Чарльз (2..3)
+      drawCharles(canvas.width / 2 + player2Lane * LANE_WIDTH + LANE_WIDTH / 2, py, charlesScared);
+    } else {
+      drawCharles(playerLane * LANE_WIDTH + LANE_WIDTH / 2, py, charlesScared);
+    }
 
-    ctx.fillStyle = '#3aa0a0'; ctx.fillRect(px - PLAYER_W / 2, py - PLAYER_H / 2, PLAYER_W, PLAYER_H);
-    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(px, py - PLAYER_H / 2 - 6, 12, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#000'; ctx.beginPath();
-    ctx.arc(px - 4, py - PLAYER_H / 2 - 8, 2.5 + eyeOffset, 0, Math.PI * 2);
-    ctx.arc(px + 4, py - PLAYER_H / 2 - 8, 2.5 + eyeOffset, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#aa8844'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(px, py - PLAYER_H / 2 - 22, 10, 0, Math.PI); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(px - 12, py - PLAYER_H / 2 - 20); ctx.lineTo(px - 12, py - PLAYER_H / 2 - 12); ctx.lineTo(px + 12, py - PLAYER_H / 2 - 12); ctx.lineTo(px + 12, py - PLAYER_H / 2 - 20); ctx.stroke();
-
+    // Частицы
     particles.forEach(p => {
       ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
       ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
