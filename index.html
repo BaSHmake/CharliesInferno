@@ -29,7 +29,7 @@
   /* Меню */
   .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(20, 20, 20, 0.98); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; border-radius: 12px; z-index: 10; padding: 15px; overflow-y: auto; }
   .screen h2 { margin: 0 0 10px; color: #fff; font-size: 20px; }
-  
+
   .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 360px; margin-bottom: 10px; }
   .mode-btn { padding: 8px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; border: 2px solid #555; transition: 0.2s; text-align: center; }
   .mode-btn:hover { transform: scale(1.03); }
@@ -40,9 +40,9 @@
   .mode-one { background: #1a1a3a; border-color: #44a; color: #ccccff; }
   .mode-five { background: #2a1a3a; border-color: #a4f; color: #f0ccff; }
   .mode-double { background: #3a1a2a; border-color: #f4a; color: #ffccf0; }
-  
+
   .nav-btn { background: #333; border-color: #777; margin-top: 0; margin-bottom: 10px; width: 100%; max-width: 360px; }
-  
+
   /* Вкладки скинов */
   .skin-tabs { display: flex; gap: 5px; width: 100%; max-width: 360px; margin-bottom: 10px; }
   .skin-tab { flex: 1; padding: 8px; background: #333; border: 1px solid #555; border-radius: 6px; font-size: 12px; cursor: pointer; color: #aaa; }
@@ -54,7 +54,7 @@
   .skin-preview { width: 40px; height: 40px; margin: 0 auto 5px; position: relative; }
   .skin-name { font-size: 10px; color: #fff; line-height: 1.1; word-break: break-word; }
   .skin-desc { font-size: 9px; color: #aaa; margin-top: 2px; }
-  
+
   @media (max-width: 420px) {
     .game-container { padding: 8px; }
     .skin-grid { grid-template-columns: repeat(3, 1fr); }
@@ -68,13 +68,13 @@
     <div class="round">Раунд <span id="roundDisplay">1</span></div>
     <div>Очки: <span id="scoreDisplay">0</span></div>
   </div>
-  
+
   <canvas id="gameCanvas" width="400" height="500"></canvas>
-  
+
   <div class="msg" id="message">Выберите режим</div>
   <div class="record" id="recordText">🏆 Рекорд: 0</div>
   <div class="combo" id="comboDisplay"></div>
-  
+
   <button id="startBtn" style="display:none;">Начать / Заново</button>
 
   <!-- ЭКРАН: ВЫБОР РЕЖИМА -->
@@ -122,7 +122,7 @@
   const PLAYER_H = 30;
   const EGG_W = 18;
   const EGG_H = 22;
-  
+
   const ROTTEN_COLOR = '#6a8a6a';
   const EGG_COLOR = '#f0e8d0';
   const DIAMOND_COLOR = '#aaf0ff';
@@ -148,7 +148,6 @@
 
   // Описание всех скинов
   const SKINS = {
-    // Цвета футболок (Классика)
     'default': { name: 'Стандарт', tab: 'colors', body: '#3aa0a0', head: '#ffffff', req: 'Бесплатно', check: () => true },
     'invisible': { name: 'Невидимый', tab: 'colors', body: 'transparent', head: 'transparent', req: 'Бесплатно', check: () => true },
     'blue': { name: 'Синий', tab: 'colors', body: '#2266ff', head: '#ffffff', req: '100 очк. Классика', check: () => records.classic >= 100 },
@@ -161,43 +160,37 @@
     'white_star': { name: 'Белая звезда', tab: 'colors', body: '#ffffff', head: '#ffffff', star: '#ffaa00', req: '3000 очк. Классика', check: () => records.classic >= 3000 },
     'rainbow': { name: 'Радужный', tab: 'colors', body: 'rainbow', head: '#ffffff', req: '3500 очк. Классика', check: () => records.classic >= 3500 },
 
-    // Режим: Двойной
     'double2': { name: 'Две головы', tab: 'modes', body: '#3aa0a0', head: '#ffffff', heads: 2, req: '500 очк. Двойной', check: () => records.double >= 500 },
     'double3': { name: 'Три головы', tab: 'modes', body: '#3aa0a0', head: '#ffffff', heads: 3, req: '1000 очк. Двойной', check: () => records.double >= 1000 },
     'scream': { name: 'Крик', tab: 'modes', body: '#3aa0a0', head: '#ffffff', scream: true, req: '1500 очк. Двойной', check: () => records.double >= 1500 },
 
-    // Режим: Хардкор
     'hard_red': { name: 'Красный Чарльз', tab: 'modes', body: '#ff0000', head: '#ffffff', req: '500 очк. Хардкор', check: () => records.hardcore >= 500 },
     'demon': { name: 'Демон', tab: 'modes', body: '#550000', head: '#ff2222', horns: true, req: '1000 очк. Хардкор', check: () => records.hardcore >= 1000 },
     'archangel': { name: 'Архангел', tab: 'modes', body: '#ffffff', head: '#ffffaa', halo: true, req: '1500 очк. Хардкор', check: () => records.hardcore >= 1500 },
 
-    // Режим: Хаос
     'chaos_purp': { name: 'Фиол-чёрный', tab: 'modes', body: '#220033', head: '#6600aa', req: '500 очк. Хаос', check: () => records.chaos >= 500 },
     'chaos_ghost': { name: 'Фиол. призрак', tab: 'modes', body: 'rgba(150,0,255,0.5)', head: 'rgba(200,150,255,0.5)', req: '1000 очк. Хаос', check: () => records.chaos >= 1000 },
     'void_crystal': { name: 'Кристалл', tab: 'modes', body: '#aaffff', head: '#ffffff', crystal: true, req: '1500 очк. Хаос', check: () => records.chaos >= 1500 },
 
-    // Режим: 5X
     'eye3': { name: 'Третий глаз', tab: 'modes', body: '#3aa0a0', head: '#ffffff', eyes: 3, req: '500 очк. 5X', check: () => records.five >= 500 },
     'eye5': { name: 'Пятиглазый', tab: 'modes', body: '#3aa0a0', head: '#ffffff', eyes: 5, req: '1000 очк. 5X', check: () => records.five >= 1000 },
     'eye_all': { name: 'Весь в глазах', tab: 'modes', body: '#ffffff', head: '#ffffff', eyes: 'all', req: '1500 очк. 5X', check: () => records.five >= 1500 },
 
-    // Режим: Just One
     'faceless': { name: 'Без лица', tab: 'modes', body: '#3aa0a0', head: '#ffffff', noFace: true, req: '500 очк. Just One', check: () => records.one >= 500 },
     'big_head': { name: 'Большая голова', tab: 'modes', body: '#3aa0a0', head: '#ffffff', bigHead: true, req: '1000 очк. Just One', check: () => records.one >= 1000 },
     'skeleton': { name: 'Скелет', tab: 'modes', body: '#dddddd', head: '#ffffff', skeleton: true, req: '1500 очк. Just One', check: () => records.one >= 1500 },
 
-    // Ачивки
     'fighter': { name: 'Боец', tab: 'achiev', body: '#886644', head: '#ffffff', req: '20 комбо', check: () => stats.totalCombo >= 20 },
     'soldier': { name: 'Солдат', tab: 'achiev', body: '#556655', head: '#ffffff', req: '50 комбо', check: () => stats.totalCombo >= 50 },
     'knight': { name: 'Рыцарь', tab: 'achiev', body: '#aaaaaa', head: '#ffffff', req: '80 комбо', check: () => stats.totalCombo >= 80 },
     'supercomp': { name: 'Суперкомп', tab: 'achiev', body: '#222222', head: '#00ff00', req: '111 комбо (сумма)', check: () => stats.totalCombo >= 111 },
-    
+
     'egg_skin': { name: 'Яйцо', tab: 'achiev', body: '#f0e8d0', head: '#f0e8d0', eggShape: true, req: 'Поймать 100 яиц', check: () => stats.eggs >= 100 },
     'rotten_skin': { name: 'Тухлое яйцо', tab: 'achiev', body: '#6a8a6a', head: '#6a8a6a', eggShape: true, req: '10 тухлых', check: () => stats.rotten >= 10 },
     'gold_skin': { name: 'Золотое яйцо', tab: 'achiev', body: '#ffd700', head: '#ffd700', eggShape: true, req: '15 золотых', check: () => stats.gold >= 15 },
     'bomb_skin': { name: 'Бомбик', tab: 'achiev', body: '#3a1a1a', head: '#3a1a1a', bombShape: true, req: '3 бомбы', check: () => stats.bomb >= 3 },
     'diamond_skin': { name: 'Алмазный', tab: 'achiev', body: '#aaf0ff', head: '#aaf0ff', crystal: true, req: '25 алмазов', check: () => stats.diamond >= 25 },
-    
+
     'dark_knight': { name: 'Тёмный рыцарь', tab: 'achiev', body: '#111111', head: '#333333', req: 'Секрет', check: () => stats.secret },
     'hacker': { name: 'Хакер', tab: 'achiev', body: '#00ff00', head: '#000000', req: 'CHEATER', check: () => stats.cheater }
   };
@@ -276,7 +269,7 @@
   // ===== МЕНЮ И СКИНЫ =====
   window.openSkins = function() { modeScreen.style.display = 'none'; skinScreen.style.display = 'flex'; renderSkins(); };
   window.closeSkins = function() { skinScreen.style.display = 'none'; modeScreen.style.display = 'flex'; };
-  
+
   let currentTab = 'colors';
   window.switchTab = function(tab, btn) {
     currentTab = tab;
@@ -285,7 +278,6 @@
     renderSkins();
   };
 
-  // Секретная кнопка (Тёмный рыцарь)
   let secretTaps = 0;
   document.getElementById('secretTap').addEventListener('click', () => {
     secretTaps++;
@@ -325,17 +317,16 @@
     for (let id in SKINS) {
       const skin = SKINS[id];
       if (skin.tab !== currentTab) continue;
-      
+
       const isUnlocked = unlockedSkins.includes(id);
       const isActive = currentSkin === id;
       const div = document.createElement('div');
       div.className = `skin-item ${isUnlocked ? '' : 'locked'} ${isActive ? 'active' : ''}`;
-      
-      // Мини-отрисовка превью через CSS-градиенты/фигуры
+
       let previewHtml = `<div class="skin-preview" style="background:${skin.body === 'rainbow' ? 'linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet)' : skin.body}; border-radius:${skin.eggShape ? '50% 50% 50% 50% / 60% 60% 40% 40%' : (skin.bombShape ? '50%' : '4px')}; border: ${skin.head ? '2px solid '+skin.head : 'none'};"></div>`;
-      
+
       div.innerHTML = `${previewHtml}<div class="skin-name">${skin.name}</div><div class="skin-desc">${isUnlocked ? (isActive ? 'Выбран' : 'Доступен') : skin.req}</div>`;
-      
+
       if (isUnlocked) {
         div.onclick = () => { currentSkin = id; saveStats(); renderSkins(); };
       }
@@ -372,7 +363,7 @@
   function startGame() {
     ensureAudio();
     if (spawnInterval) clearInterval(spawnInterval);
-    
+
     playerLane = isDouble ? 0 : Math.floor(LANES / 2);
     player2Lane = 0;
     lives = (currentMode === 'one') ? 1 : 3;
@@ -380,7 +371,7 @@
     eggs = []; particles = []; shake = 0; flash = 0;
     combo = 0; comboBest = 0;
     cheaterMode = false; cheaterLabels = []; charlesScared = 0;
-    
+
     running = true; gameOver = false;
     updateHUD();
     comboDisplay.textContent = '';
@@ -400,10 +391,77 @@
     if (currentMode === 'hardcore') baseMs = 600;
     if (currentMode === 'chaos') baseMs = 550;
     if (currentMode === 'double') baseMs = 650;
-    
+
     const warmup = currentMode === 'classic' ? Math.min(round, 3) : round;
     currentSpawnMs = Math.max(250, baseMs - (warmup - 1) * 40);
 
+    function isLaneFree(targetLane, yPos, minDist = 80) {
+      for (let e of eggs) {
+        if (e.lane === targetLane && Math.abs(e.y - yPos) < minDist) return false;
+      }
+      return true;
+    }
+    function findFreeLane(startLane, yPos, lanesArray) {
+      const order = [startLane];
+      for (let l of lanesArray) {
+        if (l !== startLane) order.push(l);
+      }
+      for (let lane of order) {
+        if (isLaneFree(lane, yPos)) return lane;
+      }
+      return -1;
+    }
+
+    spawnInterval = setInterval(() => {
+      if (!running || gameOver) return;
+
+      const r = Math.random();
+      let rottenChance = Math.min(0.45, 0.28 + (round - 1) * 0.05);
+      if (currentMode === 'one') rottenChance = Math.min(0.35, 0.20 + (round - 1) * 0.04);
+      if (currentMode === 'hardcore') rottenChance = Math.min(0.70, 0.30 + (round - 1) * 0.06);
+
+      let type;
+      if (currentMode !== 'one' && r < 0.04) type = 'bomb';
+      else if (currentMode !== 'one' && r < 0.09) type = 'gold';
+      else if (r < 0.09 + rottenChance) type = 'rotten';
+      else if (r < 0.09 + rottenChance + 0.10) type = 'diamond';
+      else type = 'normal';
+
+      let speedBoost = 0;
+      if (currentMode === 'hardcore') speedBoost = (round - 1) * 0.5;
+      else if (currentMode === 'chaos') speedBoost = (round - 1) * 0.4;
+      else speedBoost = Math.max(0, round - 3) * 0.3;
+
+      const speed = 2.2 + Math.random() * 1.2 + speedBoost;
+      const finalSpeed = currentMode === 'five' ? speed * 0.85 : speed;
+
+      let availableLanes = [];
+      if (isDouble) {
+        const isLeft = Math.random() < 0.5;
+        availableLanes = isLeft ? [0, 1] : [2, 3];
+      } else {
+        for (let i = 0; i < LANES; i++) availableLanes.push(i);
+      }
+
+      const startLane = availableLanes[Math.floor(Math.random() * availableLanes.length)];
+      const spawnY = -EGG_H;
+      const targetLane = findFreeLane(startLane, spawnY, availableLanes);
+
+      if (targetLane !== -1) {
+        eggs.push({ lane: targetLane, y: spawnY, type: type, speed: finalSpeed });
+
+        if (currentMode === 'chaos' && Math.random() < 0.25 && round > 2) {
+          const otherLanes = availableLanes.filter(l => l !== targetLane);
+          if (otherLanes.length > 0) {
+            const lane2 = otherLanes[Math.floor(Math.random() * otherLanes.length)];
+            if (isLaneFree(lane2, spawnY - 40, 100)) {
+              eggs.push({ lane: lane2, y: spawnY - 40, type: Math.random() < 0.15 ? 'rotten' : 'normal', speed: finalSpeed * 0.9 });
+            }
+          }
+        }
+      }
+    }, currentSpawnMs);
+  }
 
   function updateHUD() {
     livesDisplay.textContent = '❤'.repeat(lives) || '💀';
@@ -457,8 +515,7 @@
       }
       score += points; combo++;
       if (combo > comboBest) comboBest = combo;
-      
-      // Обновляем общий счётчик комбо (для скинов)
+
       if (combo > (stats.maxCombo || 0)) {
         const diff = combo - (stats.maxCombo || 0);
         stats.totalCombo = (stats.totalCombo || 0) + diff;
@@ -559,15 +616,13 @@
     checkUnlocks();
   }
 
-  // ===== ОТРИСОВКА ЧАРЛЬЗА (Учитывая скин) =====
   function drawCharles(px, py, isScared, pLane = 0, pOffsetX = 0) {
     const skin = SKINS[currentSkin] || SKINS['default'];
     const eyeOffset = isScared > 0 ? 1.5 : 0;
-    
+
     ctx.save();
     ctx.translate(px, py);
 
-    // Радужный цвет
     let bodyColor = skin.body;
     if (bodyColor === 'rainbow') {
       const grad = ctx.createLinearGradient(-PLAYER_W/2, 0, PLAYER_W/2, 0);
@@ -576,13 +631,12 @@
       bodyColor = grad;
     }
 
-    // Тело (футболка)
     if (!skin.bombShape) {
       ctx.fillStyle = bodyColor;
       if (skin.eggShape) {
         ctx.beginPath(); ctx.ellipse(0, 0, PLAYER_W/2, PLAYER_H/1.5, 0, 0, Math.PI*2); ctx.fill();
       } else if (skin.skeleton) {
-        ctx.fillStyle = bodyColor; // Кости
+        ctx.fillStyle = bodyColor;
         for(let i=0; i<3; i++) {
           ctx.fillRect(-15, -i*8 + 5, 30, 3);
           ctx.beginPath(); ctx.arc(0, -i*8 + 5, 4, 0, Math.PI*2); ctx.fill();
@@ -591,7 +645,6 @@
         ctx.beginPath(); ctx.moveTo(0, -PLAYER_H/2); ctx.lineTo(PLAYER_W/2, 0); ctx.lineTo(0, PLAYER_H/2); ctx.lineTo(-PLAYER_W/2, 0); ctx.fill();
       } else {
         ctx.fillRect(-PLAYER_W/2, -PLAYER_H/2, PLAYER_W, PLAYER_H);
-        // Белая звезда
         if (skin.star) {
           ctx.fillStyle = skin.star;
           ctx.beginPath();
@@ -604,27 +657,23 @@
         }
       }
     } else {
-      // Бомбик (тело)
       ctx.fillStyle = BOMB_COLOR;
       ctx.beginPath(); ctx.arc(0, 0, PLAYER_W/2, 0, Math.PI*2); ctx.fill();
       ctx.strokeStyle = '#ff4400'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(0, -PLAYER_H/2); ctx.lineTo(4, -PLAYER_H/2 - 8); ctx.stroke();
     }
 
-    // Голова
     if (skin.head !== 'transparent' && !skin.noFace) {
       const headRadius = skin.bigHead ? 14 : 10;
       ctx.fillStyle = skin.head;
       ctx.beginPath(); ctx.arc(0, -PLAYER_H/2 - 6, headRadius, 0, Math.PI*2); ctx.fill();
-      
-      // Рога (Демон)
+
       if (skin.horns) {
         ctx.fillStyle = '#ff0000';
         ctx.beginPath(); ctx.moveTo(-6, -PLAYER_H/2 - 12); ctx.lineTo(-10, -PLAYER_H/2 - 20); ctx.lineTo(-2, -PLAYER_H/2 - 14); ctx.fill();
         ctx.beginPath(); ctx.moveTo(6, -PLAYER_H/2 - 12); ctx.lineTo(10, -PLAYER_H/2 - 20); ctx.lineTo(2, -PLAYER_H/2 - 14); ctx.fill();
       }
-      
-      // Глаза
+
       if (!skin.noFace) {
         ctx.fillStyle = '#000';
         if (skin.eyes === 'all') {
@@ -640,21 +689,18 @@
           }
         }
       }
-      
-      // Крик (Рот)
+
       if (skin.scream) {
         ctx.fillStyle = '#000';
         ctx.beginPath(); ctx.ellipse(0, -PLAYER_H/2 - 2, 4, 6, 0, 0, Math.PI*2); ctx.fill();
       }
-      
-      // Нимб (Архангел)
+
       if (skin.halo) {
         ctx.strokeStyle = '#ffff00'; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.ellipse(0, -PLAYER_H/2 - 18, 10, 4, 0, 0, Math.PI*2); ctx.stroke();
       }
     }
 
-    // Корзина
     ctx.strokeStyle = '#aa8844'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(0, -PLAYER_H/2 - 18, 7, 0, Math.PI); ctx.stroke();
     ctx.beginPath(); 
@@ -662,7 +708,6 @@
     ctx.lineTo(9, -PLAYER_H/2 - 9); ctx.lineTo(9, -PLAYER_H/2 - 16); 
     ctx.stroke();
 
-    // Множественные головы (Двойной режим)
     if (skin.heads && skin.heads > 1) {
       for(let i=1; i<skin.heads; i++) {
         const offset = i % 2 === 0 ? 12 : -12;
@@ -753,7 +798,6 @@
     ctx.restore();
   }
 
-  // Инициализация при загрузке
   checkUnlocks();
   draw();
 </script>
