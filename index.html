@@ -404,67 +404,6 @@
     const warmup = currentMode === 'classic' ? Math.min(round, 3) : round;
     currentSpawnMs = Math.max(250, baseMs - (warmup - 1) * 40);
 
-    function isLaneFree(targetLane, yPos, minDist = 80) {
-      for (let e of eggs) if (e.lane === targetLane && Math.abs(e.y - yPos) < minDist) return false;
-      return true;
-    }
-    function findFreeLane(startLane, yPos, lanesArray) {
-      const order = [startLane];
-      for (let l of lanesArray) if (l !== startLane) order.push(l);
-      for (let lane of order) if (isLaneFree(lane, yPos)) return lane;
-      return -1;
-    }
-
-    spawnInterval = setInterval(() => {
-      if (!running || gameOver) return;
-      
-      const r = Math.random();
-      let rottenChance = Math.min(0.45, 0.28 + (round - 1) * 0.05);
-      if (currentMode === 'one') rottenChance = Math.min(0.35, 0.20 + (round - 1) * 0.04);
-      if (currentMode === 'hardcore') rottenChance = Math.min(0.70, 0.30 + (round - 1) * 0.06);
-      
-      let type;
-      if (currentMode !== 'one' && r < 0.04) type = 'bomb';
-      else if (currentMode !== 'one' && r < 0.09) type = 'gold';
-      else if (r < 0.09 + rottenChance) type = 'rotten';
-      else if (r < 0.09 + rottenChance + 0.10) type = 'diamond';
-      else type = 'normal';
-
-      let speedBoost = 0;
-      if (currentMode === 'hardcore') speedBoost = (round - 1) * 0.5;
-      else if (currentMode === 'chaos') speedBoost = (round - 1) * 0.4;
-      else speedBoost = Math.max(0, round - 3) * 0.3;
-
-      const speed = 2.2 + Math.random() * 1.2 + speedBoost;
-      const finalSpeed = currentMode === 'five' ? speed * 0.85 : speed;
-
-      let availableLanes = [];
-      if (isDouble) {
-        const isLeft = Math.random() < 0.5;
-        availableLanes = isLeft ? [0, 1] : [2, 3];
-      } else {
-        for (let i = 0; i < LANES; i++) availableLanes.push(i);
-      }
-
-      const startLane = availableLanes[Math.floor(Math.random() * availableLanes.length)];
-      const spawnY = -EGG_H;
-      const targetLane = findFreeLane(startLane, spawnY);
-
-      if (targetLane !== -1) {
-        eggs.push({ lane: targetLane, y: spawnY, type: type, speed: finalSpeed });
-        
-        if (currentMode === 'chaos' && Math.random() < 0.25 && round > 2) {
-          const otherLanes = availableLanes.filter(l => l !== targetLane);
-          if (otherLanes.length > 0) {
-            const lane2 = otherLanes[Math.floor(Math.random() * otherLanes.length)];
-            if (isLaneFree(lane2, spawnY - 40, 100)) {
-              eggs.push({ lane: lane2, y: spawnY - 40, type: Math.random() < 0.15 ? 'rotten' : 'normal', speed: finalSpeed * 0.9 });
-            }
-          }
-        }
-      }
-    }, currentSpawnMs);
-  }
 
   function updateHUD() {
     livesDisplay.textContent = '❤'.repeat(lives) || '💀';
