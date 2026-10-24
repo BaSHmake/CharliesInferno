@@ -16,61 +16,48 @@
     width: 100%; max-width: 440px; position: relative;
   }
   canvas { display: block; margin: 0 auto; background: #1a1a1a; border: 2px solid #444; border-radius: 8px; touch-action: none; width: 100%; max-width: 400px; height: auto; }
-  .hud {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 4px; font-size: 16px; letter-spacing: 1px;
-  }
+  .hud { display: flex; justify-content: space-between; align-items: center; padding: 10px 4px; font-size: 16px; letter-spacing: 1px; }
   .lives span { color: #ff4444; font-size: 20px; margin-right: 2px; }
   .round { color: #aaa; }
-  button {
-    background: #2a5a2a; color: #fff; border: 2px solid #4a4; padding: 10px 20px;
-    font-family: inherit; font-size: 16px; border-radius: 8px; cursor: pointer; margin-top: 10px;
-    transition: background 0.15s, transform 0.1s;
-  }
+  button { background: #2a5a2a; color: #fff; border: 2px solid #4a4; padding: 10px 20px; font-family: inherit; font-size: 16px; border-radius: 8px; cursor: pointer; margin-top: 10px; transition: background 0.15s, transform 0.1s; }
   button:hover { background: #3a7a3a; }
   button:active { transform: scale(0.97); }
   .msg { margin-top: 10px; font-size: 14px; color: #ccc; min-height: 20px; }
   .record { margin-top: 6px; font-size: 13px; color: #ffd700; }
   .combo { margin-top: 4px; font-size: 13px; color: #ff8800; min-height: 16px; }
-  .charles-face {
-    display: inline-block; width: 22px; height: 22px; background: #fff; border-radius: 50%;
-    position: relative; vertical-align: middle; margin-right: 6px;
-  }
-  .charles-face::before, .charles-face::after {
-    content: ''; position: absolute; width: 4px; height: 4px; background: #000; border-radius: 50%; top: 7px;
-  }
-  .charles-face::before { left: 5px; }
-  .charles-face::after { right: 5px; }
-  .charles-eye-line { width: 10px; height: 2px; background: #000; position: absolute; bottom: 6px; left: 6px; border-radius: 2px; }
 
-  /* Экран выбора режима */
-  .mode-screen {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(20, 20, 20, 0.97); display: flex; flex-direction: column;
-    align-items: center; justify-content: center; border-radius: 12px; z-index: 10;
-    padding: 20px; overflow-y: auto;
-  }
-  .mode-screen h2 { margin: 0 0 15px; color: #fff; font-size: 20px; }
-  .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 360px; }
-  .mode-btn {
-    padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold;
-    cursor: pointer; border: 2px solid #555; transition: 0.2s; text-align: center;
-  }
+  /* Меню */
+  .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(20, 20, 20, 0.98); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; border-radius: 12px; z-index: 10; padding: 15px; overflow-y: auto; }
+  .screen h2 { margin: 0 0 10px; color: #fff; font-size: 20px; }
+  
+  .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 360px; margin-bottom: 10px; }
+  .mode-btn { padding: 8px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; border: 2px solid #555; transition: 0.2s; text-align: center; }
   .mode-btn:hover { transform: scale(1.03); }
   .mode-btn small { display: block; font-size: 10px; font-weight: normal; margin-top: 4px; opacity: 0.8; }
-  
   .mode-classic { background: #1a3a1a; border-color: #4a4; color: #ccffcc; }
   .mode-hardcore { background: #3a1a1a; border-color: #a33; color: #ffcccc; }
   .mode-chaos { background: #3a2a1a; border-color: #ca3; color: #ffeebb; }
   .mode-one { background: #1a1a3a; border-color: #44a; color: #ccccff; }
   .mode-five { background: #2a1a3a; border-color: #a4f; color: #f0ccff; }
   .mode-double { background: #3a1a2a; border-color: #f4a; color: #ffccf0; }
-
+  
+  .nav-btn { background: #333; border-color: #777; margin-top: 0; margin-bottom: 10px; width: 100%; max-width: 360px; }
+  
+  /* Вкладки скинов */
+  .skin-tabs { display: flex; gap: 5px; width: 100%; max-width: 360px; margin-bottom: 10px; }
+  .skin-tab { flex: 1; padding: 8px; background: #333; border: 1px solid #555; border-radius: 6px; font-size: 12px; cursor: pointer; color: #aaa; }
+  .skin-tab.active { background: #555; color: #fff; border-color: #aaa; }
+  .skin-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; max-width: 360px; }
+  .skin-item { background: #333; border: 2px solid #555; border-radius: 8px; padding: 5px; text-align: center; cursor: pointer; position: relative; }
+  .skin-item.locked { opacity: 0.5; cursor: not-allowed; }
+  .skin-item.active { border-color: #ffd700; box-shadow: 0 0 10px #ffd700; }
+  .skin-preview { width: 40px; height: 40px; margin: 0 auto 5px; position: relative; }
+  .skin-name { font-size: 10px; color: #fff; line-height: 1.1; word-break: break-word; }
+  .skin-desc { font-size: 9px; color: #aaa; margin-top: 2px; }
+  
   @media (max-width: 420px) {
     .game-container { padding: 8px; }
-    .hud { font-size: 14px; }
-    .mode-screen h2 { font-size: 18px; }
-    .mode-btn { font-size: 12px; padding: 8px; }
+    .skin-grid { grid-template-columns: repeat(3, 1fr); }
   }
 </style>
 </head>
@@ -84,22 +71,36 @@
   
   <canvas id="gameCanvas" width="400" height="500"></canvas>
   
-  <div class="msg" id="message"><span class="charles-face"><span class="charles-eye-line"></span></span> Выберите режим</div>
+  <div class="msg" id="message">Выберите режим</div>
   <div class="record" id="recordText">🏆 Рекорд: 0</div>
   <div class="combo" id="comboDisplay"></div>
   
   <button id="startBtn" style="display:none;">Начать / Заново</button>
 
-  <div class="mode-screen" id="modeScreen">
+  <!-- ЭКРАН: ВЫБОР РЕЖИМА -->
+  <div class="screen" id="modeScreen">
     <h2>Выберите режим</h2>
     <div class="mode-grid">
       <div class="mode-btn mode-classic" onclick="selectMode('classic')">🟢 КЛАССИКА<small>Обычная игра</small></div>
       <div class="mode-btn mode-hardcore" onclick="selectMode('hardcore')">🔴 ХАРДКОР<small>Без разминки</small></div>
       <div class="mode-btn mode-chaos" onclick="selectMode('chaos')">🌪️ ХАОС<small>Двойные яйца</small></div>
-      <div class="mode-btn mode-one" onclick="selectMode('one')">💀 JUST ONE<small>1 жизнь, без золота</small></div>
+      <div class="mode-btn mode-one" onclick="selectMode('one')">💀 JUST ONE<small>1 жизнь</small></div>
       <div class="mode-btn mode-five" onclick="selectMode('five')">🖐️ 5X<small>5 дорожек</small></div>
       <div class="mode-btn mode-double" onclick="selectMode('double')">👥 ДВОЙНАЯ<small>2 Чарльза</small></div>
     </div>
+    <button class="nav-btn" onclick="openSkins()">🎨 Меню скинов</button>
+  </div>
+
+  <!-- ЭКРАН: ВЫБОР СКИНА -->
+  <div class="screen" id="skinScreen" style="display:none;">
+    <h2>Скины <span id="secretTap" style="cursor:pointer; opacity:0.3;">👤</span></h2>
+    <div class="skin-tabs">
+      <button class="skin-tab active" onclick="switchTab('colors', this)">Цвета</button>
+      <button class="skin-tab" onclick="switchTab('modes', this)">Режимы</button>
+      <button class="skin-tab" onclick="switchTab('achiev', this)">Ачивки</button>
+    </div>
+    <div class="skin-grid" id="skinGrid"></div>
+    <button class="nav-btn" onclick="closeSkins()" style="margin-top:15px;">Назад</button>
   </div>
 </div>
 
@@ -113,11 +114,11 @@
   const comboDisplay = document.getElementById('comboDisplay');
   const messageEl = document.getElementById('message');
   const modeScreen = document.getElementById('modeScreen');
+  const skinScreen = document.getElementById('skinScreen');
   const startBtn = document.getElementById('startBtn');
 
-  // Базовые константы
   const PLAYER_Y = canvas.height - 60;
-  const PLAYER_W = 30; // Чуть уменьшили, чтобы влезало в 5 дорожек
+  const PLAYER_W = 30;
   const PLAYER_H = 30;
   const EGG_W = 18;
   const EGG_H = 22;
@@ -128,32 +129,78 @@
   const GOLD_COLOR = '#ffd700';
   const BOMB_COLOR = '#3a1a1a';
 
-  // Динамические переменные (зависят от режима)
   let currentMode = 'classic';
   let LANES = 3;
   let LANE_WIDTH = canvas.width / LANES;
   let isDouble = false;
+  let playerLane = 1, player2Lane = 1;
+  let lives = 3, round = 1, score = 0;
+  let eggs = [], running = false, gameOver = false, spawnInterval = null, currentSpawnMs = 700;
+  let combo = 0, comboBest = 0, cheaterMode = false, cheaterLabels = [];
+  let charlesBob = 0, charlesScared = 0;
+  let shake = 0, flash = 0;
 
-  // Состояние
-  let playerLane = 1;  // Для обычных режимов
-  let player2Lane = 1; // Для режима "Двойная проблема" (правая половина)
-  let lives = 3;
-  let round = 1;
-  let score = 0;
-  let eggs = [];
-  let running = false;
-  let gameOver = false;
-  let spawnInterval = null;
-  let currentSpawnMs = 700;
-
-  let combo = 0;
-  let comboBest = 0;
-  let cheaterMode = false;
-  let cheaterLabels = [];
-  let charlesBob = 0;
-  let charlesScared = 0;
-
+  // ===== СКИНЫ И ДОСТИЖЕНИЯ =====
   let records = JSON.parse(localStorage.getItem('charlesEgg_records') || '{"classic":0,"hardcore":0,"chaos":0,"one":0,"five":0,"double":0}');
+  let stats = JSON.parse(localStorage.getItem('charlesEgg_stats') || '{"totalCombo":0,"eggs":0,"rotten":0,"gold":0,"bomb":0,"diamond":0,"cheater":false,"secret":false}');
+  let unlockedSkins = JSON.parse(localStorage.getItem('charlesEgg_unlocked') || '["default","invisible"]');
+  let currentSkin = localStorage.getItem('charlesEgg_activeSkin') || 'default';
+
+  // Описание всех скинов
+  const SKINS = {
+    // Цвета футболок (Классика)
+    'default': { name: 'Стандарт', tab: 'colors', body: '#3aa0a0', head: '#ffffff', req: 'Бесплатно', check: () => true },
+    'invisible': { name: 'Невидимый', tab: 'colors', body: 'transparent', head: 'transparent', req: 'Бесплатно', check: () => true },
+    'blue': { name: 'Синий', tab: 'colors', body: '#2266ff', head: '#ffffff', req: '100 очк. Классика', check: () => records.classic >= 100 },
+    'green': { name: 'Зелёный', tab: 'colors', body: '#22cc22', head: '#ffffff', req: '250 очк. Классика', check: () => records.classic >= 250 },
+    'yellow': { name: 'Жёлтый', tab: 'colors', body: '#ffcc00', head: '#ffffff', req: '500 очк. Классика', check: () => records.classic >= 500 },
+    'orange': { name: 'Оранжевый', tab: 'colors', body: '#ff8800', head: '#ffffff', req: '1000 очк. Классика', check: () => records.classic >= 1000 },
+    'red': { name: 'Красный', tab: 'colors', body: '#ff2222', head: '#ffffff', req: '1500 очк. Классика', check: () => records.classic >= 1500 },
+    'purple': { name: 'Фиолетовый', tab: 'colors', body: '#aa22ff', head: '#ffffff', req: '2000 очк. Классика', check: () => records.classic >= 2000 },
+    'black': { name: 'Чёрный', tab: 'colors', body: '#222222', head: '#ffffff', req: '2500 очк. Классика', check: () => records.classic >= 2500 },
+    'white_star': { name: 'Белая звезда', tab: 'colors', body: '#ffffff', head: '#ffffff', star: '#ffaa00', req: '3000 очк. Классика', check: () => records.classic >= 3000 },
+    'rainbow': { name: 'Радужный', tab: 'colors', body: 'rainbow', head: '#ffffff', req: '3500 очк. Классика', check: () => records.classic >= 3500 },
+
+    // Режим: Двойной
+    'double2': { name: 'Две головы', tab: 'modes', body: '#3aa0a0', head: '#ffffff', heads: 2, req: '500 очк. Двойной', check: () => records.double >= 500 },
+    'double3': { name: 'Три головы', tab: 'modes', body: '#3aa0a0', head: '#ffffff', heads: 3, req: '1000 очк. Двойной', check: () => records.double >= 1000 },
+    'scream': { name: 'Крик', tab: 'modes', body: '#3aa0a0', head: '#ffffff', scream: true, req: '1500 очк. Двойной', check: () => records.double >= 1500 },
+
+    // Режим: Хардкор
+    'hard_red': { name: 'Красный Чарльз', tab: 'modes', body: '#ff0000', head: '#ffffff', req: '500 очк. Хардкор', check: () => records.hardcore >= 500 },
+    'demon': { name: 'Демон', tab: 'modes', body: '#550000', head: '#ff2222', horns: true, req: '1000 очк. Хардкор', check: () => records.hardcore >= 1000 },
+    'archangel': { name: 'Архангел', tab: 'modes', body: '#ffffff', head: '#ffffaa', halo: true, req: '1500 очк. Хардкор', check: () => records.hardcore >= 1500 },
+
+    // Режим: Хаос
+    'chaos_purp': { name: 'Фиол-чёрный', tab: 'modes', body: '#220033', head: '#6600aa', req: '500 очк. Хаос', check: () => records.chaos >= 500 },
+    'chaos_ghost': { name: 'Фиол. призрак', tab: 'modes', body: 'rgba(150,0,255,0.5)', head: 'rgba(200,150,255,0.5)', req: '1000 очк. Хаос', check: () => records.chaos >= 1000 },
+    'void_crystal': { name: 'Кристалл', tab: 'modes', body: '#aaffff', head: '#ffffff', crystal: true, req: '1500 очк. Хаос', check: () => records.chaos >= 1500 },
+
+    // Режим: 5X
+    'eye3': { name: 'Третий глаз', tab: 'modes', body: '#3aa0a0', head: '#ffffff', eyes: 3, req: '500 очк. 5X', check: () => records.five >= 500 },
+    'eye5': { name: 'Пятиглазый', tab: 'modes', body: '#3aa0a0', head: '#ffffff', eyes: 5, req: '1000 очк. 5X', check: () => records.five >= 1000 },
+    'eye_all': { name: 'Весь в глазах', tab: 'modes', body: '#ffffff', head: '#ffffff', eyes: 'all', req: '1500 очк. 5X', check: () => records.five >= 1500 },
+
+    // Режим: Just One
+    'faceless': { name: 'Без лица', tab: 'modes', body: '#3aa0a0', head: '#ffffff', noFace: true, req: '500 очк. Just One', check: () => records.one >= 500 },
+    'big_head': { name: 'Большая голова', tab: 'modes', body: '#3aa0a0', head: '#ffffff', bigHead: true, req: '1000 очк. Just One', check: () => records.one >= 1000 },
+    'skeleton': { name: 'Скелет', tab: 'modes', body: '#dddddd', head: '#ffffff', skeleton: true, req: '1500 очк. Just One', check: () => records.one >= 1500 },
+
+    // Ачивки
+    'fighter': { name: 'Боец', tab: 'achiev', body: '#886644', head: '#ffffff', req: '20 комбо', check: () => stats.totalCombo >= 20 },
+    'soldier': { name: 'Солдат', tab: 'achiev', body: '#556655', head: '#ffffff', req: '50 комбо', check: () => stats.totalCombo >= 50 },
+    'knight': { name: 'Рыцарь', tab: 'achiev', body: '#aaaaaa', head: '#ffffff', req: '80 комбо', check: () => stats.totalCombo >= 80 },
+    'supercomp': { name: 'Суперкомп', tab: 'achiev', body: '#222222', head: '#00ff00', req: '111 комбо (сумма)', check: () => stats.totalCombo >= 111 },
+    
+    'egg_skin': { name: 'Яйцо', tab: 'achiev', body: '#f0e8d0', head: '#f0e8d0', eggShape: true, req: 'Поймать 100 яиц', check: () => stats.eggs >= 100 },
+    'rotten_skin': { name: 'Тухлое яйцо', tab: 'achiev', body: '#6a8a6a', head: '#6a8a6a', eggShape: true, req: '10 тухлых', check: () => stats.rotten >= 10 },
+    'gold_skin': { name: 'Золотое яйцо', tab: 'achiev', body: '#ffd700', head: '#ffd700', eggShape: true, req: '15 золотых', check: () => stats.gold >= 15 },
+    'bomb_skin': { name: 'Бомбик', tab: 'achiev', body: '#3a1a1a', head: '#3a1a1a', bombShape: true, req: '3 бомбы', check: () => stats.bomb >= 3 },
+    'diamond_skin': { name: 'Алмазный', tab: 'achiev', body: '#aaf0ff', head: '#aaf0ff', crystal: true, req: '25 алмазов', check: () => stats.diamond >= 25 },
+    
+    'dark_knight': { name: 'Тёмный рыцарь', tab: 'achiev', body: '#111111', head: '#333333', req: 'Секрет', check: () => stats.secret },
+    'hacker': { name: 'Хакер', tab: 'achiev', body: '#00ff00', head: '#000000', req: 'CHEATER', check: () => stats.cheater }
+  };
 
   // ===== ЭФФЕКТЫ =====
   let audioCtx = null;
@@ -163,8 +210,7 @@
   }
   function playTone(freq, duration, type = 'square', volume = 0.08) {
     if (!audioCtx) return;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
+    const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
     osc.type = type; osc.frequency.value = freq;
     gain.gain.setValueAtTime(volume, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
@@ -179,99 +225,132 @@
   function sfxCombo()   { playTone(1000, 0.08, 'square', 0.08); setTimeout(() => playTone(1300, 0.12, 'square', 0.08), 80); }
   function sfxGameOver(){ playTone(200, 0.4, 'sawtooth', 0.15); setTimeout(() => playTone(120, 0.5, 'sawtooth', 0.15), 200); }
   function sfxRecord()  { playTone(880, 0.12, 'triangle', 0.1); setTimeout(() => playTone(1100, 0.12, 'triangle', 0.1), 120); setTimeout(() => playTone(1320, 0.2, 'triangle', 0.1), 240); }
+  function sfxUnlock()  { playTone(660, 0.1, 'square', 0.08); setTimeout(() => playTone(880, 0.1, 'square', 0.08), 80); setTimeout(() => playTone(1320, 0.2, 'square', 0.08), 160); }
 
   let particles = [];
   function spawnParticles(x, y, color, count = 10) {
-    for (let i = 0; i < count; i++) {
-      particles.push({ x, y, vx: (Math.random() - 0.5) * 5, vy: (Math.random() - 0.5) * 5 - 1, life: 1, color, size: 2 + Math.random() * 3 });
-    }
+    for (let i = 0; i < count; i++) particles.push({ x, y, vx: (Math.random()-0.5)*5, vy: (Math.random()-0.5)*5-1, life: 1, color, size: 2+Math.random()*3 });
   }
   function updateParticles() {
     for (let i = particles.length - 1; i >= 0; i--) {
-      const p = particles[i];
-      p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life -= 0.03;
+      const p = particles[i]; p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life -= 0.03;
       if (p.life <= 0) particles.splice(i, 1);
     }
   }
-  let shake = 0;
   function triggerShake(amount) { shake = Math.max(shake, amount); }
-  let flash = 0;
   function triggerFlash(amount) { flash = Math.max(flash, amount); }
 
   // ===== УПРАВЛЕНИЕ =====
   document.addEventListener('keydown', (e) => {
     if (!running || gameOver) return;
     if (isDouble) {
-      // В двойном режиме A/D управляют левым, стрелки - правым
-      if (e.key === 'a' || e.key === 'A' || e.key === 'ф' || e.key === 'Ф') playerLane = (playerLane + 1) % 2; // 0 или 1
-      if (e.key === 'd' || e.key === 'D' || e.key === 'в' || e.key === 'В') playerLane = (playerLane + 1) % 2; // переключение между 2 дорожками
-      // Для простоты в двойном режиме левый переключается между дорожками 0 и 1.
-      // Правый между 2 и 3 (или 0 и 1 внутри своей половины)
+      if (['a','A','ф','Ф'].includes(e.key)) playerLane = (playerLane + 1) % 2;
+      if (['d','D','в','В'].includes(e.key)) playerLane = (playerLane + 1) % 2;
       if (e.key === 'ArrowLeft') player2Lane = (player2Lane + 1) % 2;
       if (e.key === 'ArrowRight') player2Lane = (player2Lane + 1) % 2;
     } else {
-      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A' || e.key === 'ф' || e.key === 'Ф') playerLane = (playerLane + LANES - 1) % LANES;
-      else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D' || e.key === 'в' || e.key === 'В') playerLane = (playerLane + 1) % LANES;
+      if (['ArrowLeft','a','A','ф','Ф'].includes(e.key)) playerLane = (playerLane + LANES - 1) % LANES;
+      else if (['ArrowRight','d','D','в','В'].includes(e.key)) playerLane = (playerLane + 1) % LANES;
     }
   });
 
-  let touchStartX = null;
-  let touchStartY = null;
-  canvas.addEventListener('touchstart', (e) => {
-    if (!running || gameOver) return;
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-    e.preventDefault();
-  }, { passive: false });
-  
+  canvas.addEventListener('touchstart', (e) => { e.preventDefault(); }, { passive: false });
   canvas.addEventListener('touchend', (e) => {
-    if (!running || gameOver || touchStartX === null) return;
+    if (!running || gameOver) return;
     const touchEndX = e.changedTouches[0].clientX;
-    const touchEndY = e.changedTouches[0].clientY;
-    const deltaX = touchEndX - touchStartX;
     const rect = canvas.getBoundingClientRect();
     const tapX = (touchEndX - rect.left) * (canvas.width / rect.width);
-    
+
     if (isDouble) {
-      // Левая половина экрана управляет левым Чарльзом, правая - правым
-      const isLeftSide = touchStartX < rect.left + rect.width / 2;
-      if (Math.abs(deltaX) > 20) {
-        if (isLeftSide) playerLane = (playerLane + 1) % 2;
-        else player2Lane = (player2Lane + 1) % 2;
-      } else {
-        // Тап по дорожке
-        const tappedLane = Math.floor(tapX / (canvas.width / 4));
-        if (isLeftSide && tappedLane < 2) playerLane = tappedLane;
-        else if (!isLeftSide && tappedLane >= 2) player2Lane = tappedLane - 2;
-      }
+      const isLeftSide = tapX < canvas.width / 2;
+      const tappedLane = Math.floor(tapX / LANE_WIDTH);
+      if (isLeftSide && tappedLane < 2) playerLane = tappedLane;
+      else if (!isLeftSide && tappedLane >= 2) player2Lane = tappedLane - 2;
     } else {
-      if (Math.abs(deltaX) > 25) {
-        playerLane = deltaX < 0 ? (playerLane + LANES - 1) % LANES : (playerLane + 1) % LANES;
-      } else {
-        const tappedLane = Math.floor(tapX / LANE_WIDTH);
-        if (tappedLane >= 0 && tappedLane < LANES) playerLane = tappedLane;
-      }
+      const tappedLane = Math.floor(tapX / LANE_WIDTH);
+      if (tappedLane >= 0 && tappedLane < LANES) playerLane = tappedLane;
     }
-    touchStartX = null;
     e.preventDefault();
   }, { passive: false });
+
+  // ===== МЕНЮ И СКИНЫ =====
+  window.openSkins = function() { modeScreen.style.display = 'none'; skinScreen.style.display = 'flex'; renderSkins(); };
+  window.closeSkins = function() { skinScreen.style.display = 'none'; modeScreen.style.display = 'flex'; };
+  
+  let currentTab = 'colors';
+  window.switchTab = function(tab, btn) {
+    currentTab = tab;
+    document.querySelectorAll('.skin-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderSkins();
+  };
+
+  // Секретная кнопка (Тёмный рыцарь)
+  let secretTaps = 0;
+  document.getElementById('secretTap').addEventListener('click', () => {
+    secretTaps++;
+    if (secretTaps >= 5) {
+      if (!stats.secret) {
+        stats.secret = true; saveStats();
+        sfxUnlock(); alert('Секретный скин "Тёмный рыцарь" разблокирован!');
+        renderSkins();
+      }
+      secretTaps = 0;
+    }
+    setTimeout(() => { secretTaps = 0; }, 1500);
+  });
+
+  function saveStats() {
+    localStorage.setItem('charlesEgg_stats', JSON.stringify(stats));
+    localStorage.setItem('charlesEgg_unlocked', JSON.stringify(unlockedSkins));
+    localStorage.setItem('charlesEgg_activeSkin', currentSkin);
+  }
+
+  function checkUnlocks() {
+    let newUnlock = false;
+    for (let id in SKINS) {
+      if (!unlockedSkins.includes(id) && SKINS[id].check()) {
+        unlockedSkins.push(id);
+        newUnlock = true;
+      }
+    }
+    if (newUnlock) { saveStats(); sfxUnlock(); }
+  }
+
+  function renderSkins() {
+    const grid = document.getElementById('skinGrid');
+    grid.innerHTML = '';
+    checkUnlocks();
+
+    for (let id in SKINS) {
+      const skin = SKINS[id];
+      if (skin.tab !== currentTab) continue;
+      
+      const isUnlocked = unlockedSkins.includes(id);
+      const isActive = currentSkin === id;
+      const div = document.createElement('div');
+      div.className = `skin-item ${isUnlocked ? '' : 'locked'} ${isActive ? 'active' : ''}`;
+      
+      // Мини-отрисовка превью через CSS-градиенты/фигуры
+      let previewHtml = `<div class="skin-preview" style="background:${skin.body === 'rainbow' ? 'linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet)' : skin.body}; border-radius:${skin.eggShape ? '50% 50% 50% 50% / 60% 60% 40% 40%' : (skin.bombShape ? '50%' : '4px')}; border: ${skin.head ? '2px solid '+skin.head : 'none'};"></div>`;
+      
+      div.innerHTML = `${previewHtml}<div class="skin-name">${skin.name}</div><div class="skin-desc">${isUnlocked ? (isActive ? 'Выбран' : 'Доступен') : skin.req}</div>`;
+      
+      if (isUnlocked) {
+        div.onclick = () => { currentSkin = id; saveStats(); renderSkins(); };
+      }
+      grid.appendChild(div);
+    }
+  }
 
   // ===== ВЫБОР РЕЖИМА =====
   window.selectMode = function(mode) {
     currentMode = mode;
     isDouble = (mode === 'double');
-    
-    // Настройка дорожек
-    if (mode === 'five') LANES = 5;
-    else if (mode === 'double') LANES = 4;
-    else LANES = 3;
+    if (mode === 'five') LANES = 5; else if (mode === 'double') LANES = 4; else LANES = 3;
     LANE_WIDTH = canvas.width / LANES;
-    
-    // Настройка жизней
-    if (mode === 'one') lives = 1;
-    else lives = 3;
-
-    playerLane = Math.floor(LANES / 2) - (isDouble ? 1 : 0);
+    lives = (mode === 'one') ? 1 : 3;
+    playerLane = isDouble ? 0 : Math.floor(LANES / 2);
     if (playerLane < 0) playerLane = 0;
     player2Lane = 0;
 
@@ -279,7 +358,7 @@
     startBtn.style.display = 'inline-block';
     updateRecordDisplay();
     updateHUD();
-    messageEl.innerHTML = '<span class="charles-face"><span class="charles-eye-line"></span></span> Нажмите «Начать / Заново»';
+    messageEl.innerHTML = 'Нажмите «Начать / Заново»';
   };
 
   function updateRecordDisplay() {
@@ -294,7 +373,6 @@
     ensureAudio();
     if (spawnInterval) clearInterval(spawnInterval);
     
-    // Сброс
     playerLane = isDouble ? 0 : Math.floor(LANES / 2);
     player2Lane = 0;
     lives = (currentMode === 'one') ? 1 : 3;
@@ -312,14 +390,12 @@
   }
 
   function scoreForNextRound() {
-    if (currentMode === 'one') return 50 + (round - 1) * 30; // Медленнее растёт, т.к. 1 жизнь
-    if (currentMode === 'five') return 100 + (round - 1) * 40;
+    if (currentMode === 'one') return 50 + (round - 1) * 30;
     return 100 + (round - 1) * 40;
   }
 
   function startSpawning() {
     if (spawnInterval) clearInterval(spawnInterval);
-
     let baseMs = 700;
     if (currentMode === 'hardcore') baseMs = 600;
     if (currentMode === 'chaos') baseMs = 550;
@@ -328,12 +404,23 @@
     const warmup = currentMode === 'classic' ? Math.min(round, 3) : round;
     currentSpawnMs = Math.max(250, baseMs - (warmup - 1) * 40);
 
+    function isLaneFree(targetLane, yPos, minDist = 80) {
+      for (let e of eggs) if (e.lane === targetLane && Math.abs(e.y - yPos) < minDist) return false;
+      return true;
+    }
+    function findFreeLane(startLane, yPos, lanesArray) {
+      const order = [startLane];
+      for (let l of lanesArray) if (l !== startLane) order.push(l);
+      for (let lane of order) if (isLaneFree(lane, yPos)) return lane;
+      return -1;
+    }
+
     spawnInterval = setInterval(() => {
       if (!running || gameOver) return;
       
       const r = Math.random();
       let rottenChance = Math.min(0.45, 0.28 + (round - 1) * 0.05);
-      if (currentMode === 'one') rottenChance = Math.min(0.35, 0.20 + (round - 1) * 0.04); // Чуть добрее, ведь 1 жизнь
+      if (currentMode === 'one') rottenChance = Math.min(0.35, 0.20 + (round - 1) * 0.04);
       if (currentMode === 'hardcore') rottenChance = Math.min(0.70, 0.30 + (round - 1) * 0.06);
       
       let type;
@@ -349,28 +436,32 @@
       else speedBoost = Math.max(0, round - 3) * 0.3;
 
       const speed = 2.2 + Math.random() * 1.2 + speedBoost;
-      
-      // Для 5 дорожек яйца падают чуть медленнее, чтобы успевать
       const finalSpeed = currentMode === 'five' ? speed * 0.85 : speed;
 
-      const lane1 = Math.floor(Math.random() * LANES);
-      
-      // В "Двойной проблеме" яйца падают только в своей половине
-      // Левая половина (0 и 1) и правая (2 и 3)
-      let actualLane = lane1;
+      let availableLanes = [];
       if (isDouble) {
         const isLeft = Math.random() < 0.5;
-        if (isLeft) actualLane = Math.floor(Math.random() * 2); // 0 или 1
-        else actualLane = Math.floor(Math.random() * 2) + 2;    // 2 или 3
+        availableLanes = isLeft ? [0, 1] : [2, 3];
+      } else {
+        for (let i = 0; i < LANES; i++) availableLanes.push(i);
       }
 
-      eggs.push({ lane: actualLane, y: -EGG_H, type: type, speed: finalSpeed });
+      const startLane = availableLanes[Math.floor(Math.random() * availableLanes.length)];
+      const spawnY = -EGG_H;
+      const targetLane = findFreeLane(startLane, spawnY);
 
-      // Хаос: двойные яйца
-      if (currentMode === 'chaos' && Math.random() < 0.25 && round > 2) {
-        let lane2 = Math.floor(Math.random() * LANES);
-        while (lane2 === lane1) lane2 = Math.floor(Math.random() * LANES);
-        eggs.push({ lane: lane2, y: -EGG_H - 40, type: Math.random() < 0.15 ? 'rotten' : 'normal', speed: finalSpeed * 0.9 });
+      if (targetLane !== -1) {
+        eggs.push({ lane: targetLane, y: spawnY, type: type, speed: finalSpeed });
+        
+        if (currentMode === 'chaos' && Math.random() < 0.25 && round > 2) {
+          const otherLanes = availableLanes.filter(l => l !== targetLane);
+          if (otherLanes.length > 0) {
+            const lane2 = otherLanes[Math.floor(Math.random() * otherLanes.length)];
+            if (isLaneFree(lane2, spawnY - 40, 100)) {
+              eggs.push({ lane: lane2, y: spawnY - 40, type: Math.random() < 0.15 ? 'rotten' : 'normal', speed: finalSpeed * 0.9 });
+            }
+          }
+        }
       }
     }, currentSpawnMs);
   }
@@ -388,15 +479,12 @@
     requestAnimationFrame(gameLoop);
   }
 
-  // Проверка ловли яйца конкретным игроком
   function checkCatch(egg, pLane, pOffsetX = 0, pWidth = canvas.width) {
     const eggCenterX = egg.lane * LANE_WIDTH + LANE_WIDTH / 2;
     const playerCenterX = pOffsetX + pLane * LANE_WIDTH + LANE_WIDTH / 2;
     const playerTop = PLAYER_Y - PLAYER_H / 2;
     const playerBottom = PLAYER_Y + PLAYER_H / 2;
-    
-    return (egg.y + EGG_H >= playerTop && egg.y <= playerBottom &&
-            Math.abs(eggCenterX - playerCenterX) < LANE_WIDTH * 0.4);
+    return (egg.y + EGG_H >= playerTop && egg.y <= playerBottom && Math.abs(eggCenterX - playerCenterX) < LANE_WIDTH * 0.4);
   }
 
   function handleCatch(egg, eggCenterX) {
@@ -413,20 +501,31 @@
       sfxBomb(); triggerShake(18); triggerFlash(1); charlesScared = 1;
       if (navigator.vibrate) navigator.vibrate([200, 80, 200]);
       spawnParticles(eggCenterX, PLAYER_Y - PLAYER_H / 2, '#ff4400', 20);
+      stats.bomb = (stats.bomb || 0) + 1;
       if (lives <= 0) return true;
     } else {
       let points = 10;
-      if (egg.type === 'diamond') points = 20;
+      if (egg.type === 'diamond') { points = 20; stats.diamond = (stats.diamond || 0) + 1; }
       if (egg.type === 'gold') {
-        points = 15; if (lives < 5) { lives++; updateHUD(); }
+        points = 15; stats.gold = (stats.gold || 0) + 1;
+        if (lives < 5) { lives++; updateHUD(); }
         sfxGold(); spawnParticles(eggCenterX, PLAYER_Y - PLAYER_H / 2, GOLD_COLOR, 15);
       } else if (egg.type === 'diamond') {
         sfxDiamond(); spawnParticles(eggCenterX, PLAYER_Y - PLAYER_H / 2, DIAMOND_COLOR);
       } else {
+        stats.eggs = (stats.eggs || 0) + 1;
         sfxCatch(); spawnParticles(eggCenterX, PLAYER_Y - PLAYER_H / 2, EGG_COLOR);
       }
       score += points; combo++;
       if (combo > comboBest) comboBest = combo;
+      
+      // Обновляем общий счётчик комбо (для скинов)
+      if (combo > (stats.maxCombo || 0)) {
+        const diff = combo - (stats.maxCombo || 0);
+        stats.totalCombo = (stats.totalCombo || 0) + diff;
+        stats.maxCombo = combo;
+      }
+
       if (combo > 0 && combo % 5 === 0) {
         score += 30; sfxCombo();
         comboDisplay.textContent = `🔥 Комбо x${combo}! +30`;
@@ -452,9 +551,7 @@
       let caught = false;
 
       if (isDouble) {
-        // Проверяем левого Чарльза (дорог 2, смещение 0)
         if (checkCatch(egg, playerLane, 0, canvas.width / 2)) caught = true;
-        // Проверяем правого Чарльза (дорог 2, смещение canvas.width / 2)
         else if (checkCatch(egg, player2Lane, canvas.width / 2, canvas.width / 2)) caught = true;
       } else {
         if (checkCatch(egg, playerLane, 0, canvas.width)) caught = true;
@@ -463,18 +560,19 @@
       if (caught) {
         const isDead = handleCatch(egg, eggCenterX);
         eggs.splice(i, 1);
-        if (isDead) { triggerGameOver(); return; }
+        if (isDead) { saveStats(); triggerGameOver(); return; }
         continue;
       }
 
-      // Пропуск яйца
       if (egg.y > canvas.height + 20) {
         if (egg.type !== 'rotten' && egg.type !== 'bomb') {
           lives--; if (lives < 0) lives = 0;
           combo = 0; comboDisplay.textContent = '';
           updateHUD(); sfxRotten(); triggerFlash(0.4); charlesScared = 1;
           if (navigator.vibrate) navigator.vibrate(80);
-          if (lives <= 0) { triggerGameOver(); return; }
+          if (lives <= 0) { saveStats(); triggerGameOver(); return; }
+        } else if (egg.type === 'rotten') {
+          stats.rotten = (stats.rotten || 0) + 1;
         }
         eggs.splice(i, 1);
       }
@@ -505,10 +603,12 @@
     } else {
       messageEl.textContent = `💀 Конец! Очки: ${score}. Рекорд: ${records[currentMode] || 0}.`;
     }
+    saveStats(); checkUnlocks();
   }
 
   function triggerCheater() {
     cheaterMode = true; running = false; gameOver = true;
+    stats.cheater = true; saveStats();
     if (spawnInterval) clearInterval(spawnInterval);
     cheaterLabels = [];
     for (let i = 0; i < 30; i++) {
@@ -517,24 +617,124 @@
     sfxBomb(); triggerShake(20); triggerFlash(1);
     if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
     messageEl.textContent = '💀 CHEATER! Чарльз знает. Нажми «Начать / Заново».';
+    checkUnlocks();
   }
 
-  // Рисование Чарльза
-  function drawCharles(px, py, isScared, headOnly = false) {
+  // ===== ОТРИСОВКА ЧАРЛЬЗА (Учитывая скин) =====
+  function drawCharles(px, py, isScared, pLane = 0, pOffsetX = 0) {
+    const skin = SKINS[currentSkin] || SKINS['default'];
     const eyeOffset = isScared > 0 ? 1.5 : 0;
-    if (!headOnly) {
-      ctx.fillStyle = '#3aa0a0';
-      ctx.fillRect(px - PLAYER_W / 2, py - PLAYER_H / 2, PLAYER_W, PLAYER_H);
+    
+    ctx.save();
+    ctx.translate(px, py);
+
+    // Радужный цвет
+    let bodyColor = skin.body;
+    if (bodyColor === 'rainbow') {
+      const grad = ctx.createLinearGradient(-PLAYER_W/2, 0, PLAYER_W/2, 0);
+      grad.addColorStop(0, 'red'); grad.addColorStop(0.2, 'orange'); grad.addColorStop(0.4, 'yellow');
+      grad.addColorStop(0.6, 'green'); grad.addColorStop(0.8, 'blue'); grad.addColorStop(1, 'violet');
+      bodyColor = grad;
     }
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath(); ctx.arc(px, py - PLAYER_H / 2 - 6, 10, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#000';
-    ctx.beginPath();
-    ctx.arc(px - 3, py - PLAYER_H / 2 - 8, 2 + eyeOffset, 0, Math.PI * 2);
-    ctx.arc(px + 3, py - PLAYER_H / 2 - 8, 2 + eyeOffset, 0, Math.PI * 2); ctx.fill();
+
+    // Тело (футболка)
+    if (!skin.bombShape) {
+      ctx.fillStyle = bodyColor;
+      if (skin.eggShape) {
+        ctx.beginPath(); ctx.ellipse(0, 0, PLAYER_W/2, PLAYER_H/1.5, 0, 0, Math.PI*2); ctx.fill();
+      } else if (skin.skeleton) {
+        ctx.fillStyle = bodyColor; // Кости
+        for(let i=0; i<3; i++) {
+          ctx.fillRect(-15, -i*8 + 5, 30, 3);
+          ctx.beginPath(); ctx.arc(0, -i*8 + 5, 4, 0, Math.PI*2); ctx.fill();
+        }
+      } else if (skin.crystal) {
+        ctx.beginPath(); ctx.moveTo(0, -PLAYER_H/2); ctx.lineTo(PLAYER_W/2, 0); ctx.lineTo(0, PLAYER_H/2); ctx.lineTo(-PLAYER_W/2, 0); ctx.fill();
+      } else {
+        ctx.fillRect(-PLAYER_W/2, -PLAYER_H/2, PLAYER_W, PLAYER_H);
+        // Белая звезда
+        if (skin.star) {
+          ctx.fillStyle = skin.star;
+          ctx.beginPath();
+          for(let i=0; i<5; i++) {
+            const angle = -Math.PI/2 + i * Math.PI * 2 / 5;
+            const x = Math.cos(angle) * 6, y = Math.sin(angle) * 6;
+            if(i===0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          }
+          ctx.fill();
+        }
+      }
+    } else {
+      // Бомбик (тело)
+      ctx.fillStyle = BOMB_COLOR;
+      ctx.beginPath(); ctx.arc(0, 0, PLAYER_W/2, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#ff4400'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, -PLAYER_H/2); ctx.lineTo(4, -PLAYER_H/2 - 8); ctx.stroke();
+    }
+
+    // Голова
+    if (skin.head !== 'transparent' && !skin.noFace) {
+      const headRadius = skin.bigHead ? 14 : 10;
+      ctx.fillStyle = skin.head;
+      ctx.beginPath(); ctx.arc(0, -PLAYER_H/2 - 6, headRadius, 0, Math.PI*2); ctx.fill();
+      
+      // Рога (Демон)
+      if (skin.horns) {
+        ctx.fillStyle = '#ff0000';
+        ctx.beginPath(); ctx.moveTo(-6, -PLAYER_H/2 - 12); ctx.lineTo(-10, -PLAYER_H/2 - 20); ctx.lineTo(-2, -PLAYER_H/2 - 14); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(6, -PLAYER_H/2 - 12); ctx.lineTo(10, -PLAYER_H/2 - 20); ctx.lineTo(2, -PLAYER_H/2 - 14); ctx.fill();
+      }
+      
+      // Глаза
+      if (!skin.noFace) {
+        ctx.fillStyle = '#000';
+        if (skin.eyes === 'all') {
+          for(let i=0; i<8; i++) {
+            ctx.beginPath(); ctx.arc((Math.random()-0.5)*20, -PLAYER_H/2 - 6 + (Math.random()-0.5)*15, 1.5, 0, Math.PI*2); ctx.fill();
+          }
+        } else {
+          const eyeCount = skin.eyes || 2;
+          const spacing = headRadius / (eyeCount/2 + 0.5);
+          for(let i=0; i<eyeCount; i++) {
+            const ex = (i - (eyeCount-1)/2) * spacing;
+            ctx.beginPath(); ctx.arc(ex, -PLAYER_H/2 - 8, 2 + eyeOffset, 0, Math.PI*2); ctx.fill();
+          }
+        }
+      }
+      
+      // Крик (Рот)
+      if (skin.scream) {
+        ctx.fillStyle = '#000';
+        ctx.beginPath(); ctx.ellipse(0, -PLAYER_H/2 - 2, 4, 6, 0, 0, Math.PI*2); ctx.fill();
+      }
+      
+      // Нимб (Архангел)
+      if (skin.halo) {
+        ctx.strokeStyle = '#ffff00'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.ellipse(0, -PLAYER_H/2 - 18, 10, 4, 0, 0, Math.PI*2); ctx.stroke();
+      }
+    }
+
+    // Корзина
     ctx.strokeStyle = '#aa8844'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(px, py - PLAYER_H / 2 - 20, 8, 0, Math.PI); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(px - 10, py - PLAYER_H / 2 - 18); ctx.lineTo(px - 10, py - PLAYER_H / 2 - 10); ctx.lineTo(px + 10, py - PLAYER_H / 2 - 10); ctx.lineTo(px + 10, py - PLAYER_H / 2 - 18); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, -PLAYER_H/2 - 18, 7, 0, Math.PI); ctx.stroke();
+    ctx.beginPath(); 
+    ctx.moveTo(-9, -PLAYER_H/2 - 16); ctx.lineTo(-9, -PLAYER_H/2 - 9); 
+    ctx.lineTo(9, -PLAYER_H/2 - 9); ctx.lineTo(9, -PLAYER_H/2 - 16); 
+    ctx.stroke();
+
+    // Множественные головы (Двойной режим)
+    if (skin.heads && skin.heads > 1) {
+      for(let i=1; i<skin.heads; i++) {
+        const offset = i % 2 === 0 ? 12 : -12;
+        ctx.fillStyle = skin.head;
+        ctx.beginPath(); ctx.arc(offset, -PLAYER_H/2 - 14, 8, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#000';
+        ctx.beginPath(); ctx.arc(offset-3, -PLAYER_H/2 - 15, 1.5, 0, Math.PI*2); ctx.arc(offset+3, -PLAYER_H/2 - 15, 1.5, 0, Math.PI*2); ctx.fill();
+      }
+    }
+
+    ctx.restore();
   }
 
   function draw() {
@@ -546,21 +746,18 @@
     ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
 
-    // Рисуем дорожки
     for (let i = 0; i <= LANES; i++) {
       ctx.beginPath(); ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
       ctx.moveTo(i * LANE_WIDTH, 0); ctx.lineTo(i * LANE_WIDTH, canvas.height);
       ctx.stroke();
     }
 
-    // В двойном режиме разделительная линия посередине
     if (isDouble) {
       ctx.beginPath(); ctx.strokeStyle = '#ff4444'; ctx.lineWidth = 2;
       ctx.moveTo(canvas.width / 2, 0); ctx.lineTo(canvas.width / 2, canvas.height);
       ctx.stroke();
     }
 
-    // Яйца
     eggs.forEach(egg => {
       const x = egg.lane * LANE_WIDTH + LANE_WIDTH / 2 - EGG_W / 2;
       const y = egg.y;
@@ -585,18 +782,14 @@
       }
     });
 
-    // Чарльзы
     const py = PLAYER_Y + Math.sin(charlesBob) * 2;
     if (isDouble) {
-      // Левый Чарльз (0..1)
-      drawCharles(playerLane * LANE_WIDTH + LANE_WIDTH / 2, py, charlesScared);
-      // Правый Чарльз (2..3)
-      drawCharles(canvas.width / 2 + player2Lane * LANE_WIDTH + LANE_WIDTH / 2, py, charlesScared);
+      drawCharles(playerLane * LANE_WIDTH + LANE_WIDTH / 2, py, charlesScared, playerLane, 0);
+      drawCharles(canvas.width / 2 + player2Lane * LANE_WIDTH + LANE_WIDTH / 2, py, charlesScared, player2Lane, canvas.width/2);
     } else {
-      drawCharles(playerLane * LANE_WIDTH + LANE_WIDTH / 2, py, charlesScared);
+      drawCharles(playerLane * LANE_WIDTH + LANE_WIDTH / 2, py, charlesScared, playerLane);
     }
 
-    // Частицы
     particles.forEach(p => {
       ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
       ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
@@ -621,6 +814,8 @@
     ctx.restore();
   }
 
+  // Инициализация при загрузке
+  checkUnlocks();
   draw();
 </script>
 </body>
